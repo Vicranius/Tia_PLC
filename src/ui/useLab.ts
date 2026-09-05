@@ -1,5 +1,6 @@
 'use client';
 import {useEffect,useRef,useState,useCallback} from 'react';
+import simulationWorkerUrl from '../simulation/worker.ts?worker&url';
 import {challenge,emptyProgram,type Challenge} from '../challenges/catalog';
 import {blankNetwork,type Program,type Scalar,type Network} from '../plc/model';
 import {compile,parseProgram} from '../plc/compiler';
@@ -14,7 +15,7 @@ export function useLab(){
  const [snapshot,setSnapshot]=useState<Snapshot>();const [plant,setPlant]=useState<PlantState>(new Plant().snapshot());const [mode,setMode]=useState('STOP');const [cycle,setCycle]=useState(0);const [monitor,setMonitor]=useState(true);const [speed,setSpeed]=useState('1');const [message,setMessage]=useState('Kontak panelinden ilk elemanını ekle.');const [busy,setBusy]=useState(false);const [result,setResult]=useState<Evaluation>();const [hints,setHints]=useState(0);const [solution,setSolution]=useState<Solution>();const [stepIndex,setStepIndex]=useState(0);const [attempts,setAttempts]=useState<Attempt[]>([]);const [history,setHistory]=useState<Program[]>([]);const [redo,setRedo]=useState<Program[]>([]);const [saved,setSaved]=useState(false);const worker=useRef<Worker|null>(null);const current=useRef({program,c,hints});current.current={program,c,hints};
  const send=useCallback((m:Record<string,unknown>)=>worker.current?.postMessage(m),[]);
  const refresh=useCallback(async()=>{try{const r=await fetch('/api/lab?action=profile');const d=await r.json() as {error?:string;attempts:Attempt[]};if(!r.ok)throw Error(d.error);setAttempts(d.attempts);}catch(e){setMessage(`İlerleme okunamadı: ${String(e)}`);}},[]);
- useEffect(()=>{const w=new Worker(new URL('../simulation/worker.ts',import.meta.url),{type:'module'});worker.current=w;w.onmessage=(event:MessageEvent<{snapshot?:Snapshot;plant:PlantState;mode:string;cycle:number;error?:string}>)=>{setSnapshot(event.data.snapshot);setPlant(event.data.plant);setMode(event.data.mode);setCycle(event.data.cycle);if(event.data.error)setMessage(event.data.error);};w.onerror=e=>{setMode('ERROR');setMessage(`Simülasyon başlatılamadı: ${e.message}`);};let alive=true;
+ useEffect(()=>{let w:Worker;try{w=new Worker(new URL(simulationWorkerUrl,window.location.origin),{type:'module'});}catch(error){setMode('ERROR');setMessage('Simülasyon başlatılamadı: '+String(error));return;}worker.current=w;w.onmessage=(event:MessageEvent<{snapshot?:Snapshot;plant:PlantState;mode:string;cycle:number;error?:string}>)=>{setSnapshot(event.data.snapshot);setPlant(event.data.plant);setMode(event.data.mode);setCycle(event.data.cycle);if(event.data.error)setMessage(event.data.error);};w.onerror=e=>{setMode('ERROR');setMessage(`Simülasyon başlatılamadı: ${e.message}`);};let alive=true;
  void (async()=>{try{await fetch('/api/lab?id=3&seed=0');const r=await fetch('/api/lab?action=restore');const d=await r.json() as {error?:string;project?:{id:number;seed:number;program:unknown}};if(!r.ok)throw Error(d.error);if(alive&&d.project){const p=parseProgram(d.project.program);setProgram(p);setC(challenge(d.project.id,d.project.seed));setSaved(true);setMessage('Kaydedilmiş Ladder projen geri yüklendi.');}if(alive)await refresh();}catch(e){if(alive)setMessage(`Kayıt servisi: ${String(e)}. Ladder düzenlemeye devam edebilirsin.`);}})();return()=>{alive=false;w.terminate();worker.current=null;};},[refresh]);
  useEffect(()=>{setSnapshot(undefined);const ds=compile(program);if(ds.some(d=>d.severity==='error'))send({action:'clear'});else send({action:'load',program,plant:c.plant});},[program,c.plant,send]);
  const commit=(p:Program)=>{setHistory(h=>[...h.slice(-29),program]);setRedo([]);setProgram(p);setResult(undefined);setSaved(false);};
@@ -29,4 +30,5 @@ export function useLab(){
  const input=(tag:string,value:Scalar)=>send({action:'input',tag,value});
  return {c,program,commit,snapshot,plant,mode,cycle,monitor,setMonitor,speed,setSpeed,message,setMessage,busy,result,hints,setHints,solution,attempts,saved,history,redo,undo,redoAction,send,run,save,loadChallenge,check,reveal,input};
 }
+
 
