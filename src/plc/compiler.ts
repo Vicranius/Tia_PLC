@@ -1,0 +1,30 @@
+import {type Program,type Diagnostic,type Value,walk,types} from './model';
+import {address,validScalar} from './memory';
+export function compile(p:Program):Diagnostic[]{
+ const ds:Diagnostic[]=[]; const add=(code:string,message:string,network?:string,severity:'error'|'warning'='error')=>ds.push({code,message,network,severity});
+ const tags=new Map(p.tags.map(t=>[t.name,t]));const ids=new Set<string>();const writes=new Map<string,string>();
+ for(const t of p.tags){if(!/^[A-Za-z_][A-Za-z0-9_]*$/.test(t.name))add('E002',`Geçersiz tag adı ${t.name}`);try{address(t.address,t.type);}catch(e){add('E003',String(e));}if(!validScalar(t.type,t.initial))add('E004',`${t.name}: başlangıç değeri ${t.type} ile uyumsuz`);}
+ if(tags.size!==p.tags.length)add('E005','Tag adları benzersiz olmalı');
+ if(!p.blocks.some(b=>b.id==='OB1'))add('E010','Main [OB1] bulunamadı');
+ const ref=(tag:string,n:string,bool=false)=>{const t=tags.get(tag);if(!t)add('E001',`Undefined tag ${tag}`,n);else if(bool&&t.type!=='BOOL')add('E006',`${tag}: BOOL gerekli`,n);};
+ const value=(v:Value,n:string):void=>{if(v.kind==='tag'){ref(v.tag,n);if(tags.get(v.tag)?.type==='BOOL')add('E006',`${v.tag}: sayısal operand gerekli`,n);}if(v.kind==='calc'){value(v.a,n);value(v.b,n);if(v.c)value(v.c,n);}};
+ for(const b of p.blocks){if(!['OB1','OB100'].includes(b.id)&&b.networks.length)add('W060',`${b.id}: MVP içinde otomatik çağrılmaz`,undefined,'warning');for(const n of b.networks){
+ ref(n.output.tag,n.id,n.output.type!=='MOVE');const target=tags.get(n.output.tag);
+ if(target?.address.startsWith('%I'))add('E009','Input image program tarafından yazılamaz',n.id);
+ if(n.output.type==='MOVE'){if(!n.output.value)add('E011','MOVE operandı eksik',n.id);else value(n.output.value,n.id);if(target?.type==='BOOL')add('E006','MOVE hedefi sayısal olmalı',n.id);}
+ const key=target?.address??n.output.tag;if(writes.has(key)&&n.output.type==='COIL')add('W021',`${key} birden fazla network tarafından yazılıyor; son yazan kazanır`,n.id,'warning');writes.set(key,n.id);
+ walk(n.logic,e=>{if(ids.has(e.id))add('E034',`Instruction/instance kimliği tekrar kullanılmış: ${e.id}`,n.id);ids.add(e.id);if('tag'in e)ref(e.tag,n.id,true);if('children'in e&&e.children.length===0)add('E014','Coil has no logical path: boş AND/OR grubu',n.id);if('pt'in e&&(!Number.isInteger(e.pt)||e.pt<0||e.pt>3600000))add('E030','PT 0–3600000 ms aralığında olmalı',n.id);if('pv'in e&&(!Number.isInteger(e.pv)||e.pv<1||e.pv>32767))add('E031','PV 1–32767 aralığında olmalı',n.id);if(e.type==='COMPARE'){value(e.a,n.id);value(e.b,n.id);}if(e.type==='AND'){const a=e.children.filter(x=>x.type==='NO').map(x=>'tag'in x?x.tag:'');if(e.children.some(x=>x.type==='NC'&&a.includes(x.tag)))add('W040','Aynı tag NO ve NC seri: bu yol erişilemez',n.id,'warning');}});
+ }}return ds;
+}
+// Untrusted imported programs and API submissions are bounded before recursive execution.
+export function parseProgram(raw:unknown):Program {
+ let count=0;const obj=(v:unknown):Record<string,unknown>=>{if(!v||typeof v!=='object'||Array.isArray(v))throw Error('Nesne bekleniyor');return v as Record<string,unknown>;};
+ const str=(v:unknown)=>{if(typeof v!=='string'||v.length>300)throw Error('Geçersiz metin');return v;};
+ const num=(v:unknown)=>{if(typeof v!=='number'||!Number.isFinite(v))throw Error('Geçersiz sayı');return v;};
+ const val=(v:unknown,d=0):void=>{if(d>12)throw Error('Operand çok derin');const o=obj(v);if(o.kind==='literal')num(o.value);else if(o.kind==='tag')str(o.tag);else if(o.kind==='calc'&&['ADD','SUB','MUL','DIV','INT_TO_REAL','REAL_TO_INT','WORD_TO_INT','NORM_X','SCALE_X'].includes(String(o.op))){val(o.a,d+1);val(o.b,d+1);if(o.c)val(o.c,d+1);}else throw Error('Geçersiz operand');};
+ const expr=(v:unknown,d=0):void=>{if(++count>800||d>15)throw Error('Program karmaşıklık sınırını aşıyor');const e=obj(v);str(e.id);switch(e.type){case'NO':case'NC':str(e.tag);break;case'AND':case'OR':if(!Array.isArray(e.children))throw Error('children eksik');e.children.forEach(x=>expr(x,d+1));break;case'TON':case'TOF':case'TP':num(e.pt);expr(e.input,d+1);break;case'CTU':num(e.pv);expr(e.input,d+1);expr(e.reset,d+1);break;case'R_TRIG':case'F_TRIG':expr(e.input,d+1);break;case'COMPARE':if(!['==','<>','>','<','>=','<='].includes(String(e.op)))throw Error('Geçersiz karşılaştırma');val(e.a);val(e.b);break;default:throw Error('Desteklenmeyen instruction');}};
+ const p=obj(raw);if(p.version!==1||!Array.isArray(p.tags)||!Array.isArray(p.blocks)||p.tags.length>256||p.blocks.length>20)throw Error('Program formatı geçersiz');str(p.cpu);
+ for(const x of p.tags){const t=obj(x);str(t.name);str(t.address);str(t.comment);if(!types.includes(t.type as never)||!validScalar(t.type as never,t.initial))throw Error('Tag türü/değeri geçersiz');}
+ const blockIds=new Set();const networkIds=new Set();for(const x of p.blocks){const b=obj(x);str(b.id);if(blockIds.has(b.id))throw Error('Blok kimliği yinelenmiş');blockIds.add(b.id);if(!['OB','FC','FB'].includes(String(b.kind))||!Array.isArray(b.networks)||b.networks.length>100)throw Error('Blok formatı geçersiz');for(const y of b.networks){const n=obj(y);str(n.id);if(networkIds.has(n.id))throw Error('Network kimliği yinelenmiş');networkIds.add(n.id);str(n.title);expr(n.logic);const o=obj(n.output);str(o.tag);if(!['COIL','SET','RESET','MOVE'].includes(String(o.type)))throw Error('Çıkış tipi geçersiz');if(o.type==='MOVE')val(o.value);}}
+ return raw as Program;
+}

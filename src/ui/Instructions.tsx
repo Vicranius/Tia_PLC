@@ -1,0 +1,14 @@
+'use client';
+import {useState} from 'react';
+import {Folder,Search,BookOpen} from 'lucide-react';
+import {Accordion,AccordionItem,AccordionTrigger,AccordionContent} from '@/components/ui/accordion';
+const groups:[string,[string,string][]][]=[
+ ['Bit logic operations',[['NO','Normally open contact'],['NC','Normally closed contact'],['COIL','Assignment'],['SET','Set output'],['RESET','Reset output'],['R_TRIG','Positive edge'],['F_TRIG','Negative edge']]],
+ ['Timer operations',[['TON','On-delay timer'],['TOF','Off-delay timer'],['TP','Pulse timer']]],
+ ['Counter operations',[['CTU','Count up']]],
+ ['Comparator operations',[['CMP ==','Equal'],['CMP <>','Not equal'],['CMP >=','Greater or equal'],['CMP <=','Less or equal'],['CMP >','Greater than'],['CMP <','Less than']]],
+ ['Math functions',[['ADD','Addition'],['SUB','Subtraction'],['MUL','Multiplication'],['DIV','Division']]],
+ ['Move operations',[['MOVE','Move value']]],
+ ['Conversion operations',[['INT_TO_REAL','Int to Real'],['REAL_TO_INT','Real to Int'],['WORD_TO_INT','Word to Int'],['NORM_X','Normalize'],['SCALE_X','Scale']]],
+];
+export default function Instructions({insert,disabled,onProblem}:{insert:(kind:string)=>void;disabled:boolean;onProblem:()=>void}){const [search,setSearch]=useState('');return <div className="instructions-browser"><div className="classic-section-title">Options</div><div className="instructions-search"><Search size={14}/><input aria-label="Instruction ara" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search instructions"/></div><div className="classic-section-title">▾ Basic instructions</div><div className="instruction-columns"><span>Name</span><span>Description</span></div><Accordion multiple defaultValue={['Bit logic operations','Timer operations','Comparator operations']} className="instruction-tree">{groups.map(([title,items])=>{const filtered=items.filter(([n,d])=>(n+' '+d).toLowerCase().includes(search.toLowerCase()));return filtered.length>0&&<AccordionItem key={title} value={title}><AccordionTrigger><Folder size={15}/>{title}</AccordionTrigger><AccordionContent>{filtered.map(([name,description])=><button key={name} disabled={disabled} onClick={()=>insert(name)} title={`${name} ekle`}><span className="instruction-tree-symbol">{name==='NO'?'─| |─':name==='NC'?'─|/|─':name==='COIL'?'─( )─':'▣'}</span><b>{name}</b><span>{description}</span></button>)}</AccordionContent></AccordionItem>;})}</Accordion><div className="instruction-guidance"><p>Bir elemanı seç, sonra instruction’a tıkla. Yeni eleman seçili yol üzerine eklenir.</p><p>Etiketleri ve PT / PV değerlerini alt Properties alanından düzenle.</p><button onClick={onProblem}><BookOpen size={14}/>Aktif problemi göster</button></div><div className="classic-section-title">▸ Advanced blocks <small>Sonraki aşama</small></div></div>;}

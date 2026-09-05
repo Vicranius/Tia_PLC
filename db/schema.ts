@@ -1,0 +1,3 @@
+import {sqliteTable,text,integer,index} from 'drizzle-orm/sqlite-core';
+export const projects=sqliteTable('projects',{owner:text('owner').primaryKey(),payload:text('payload').notNull(),updated:integer('updated').notNull()});
+export const attempts=sqliteTable('attempts',{id:text('id').primaryKey(),owner:text('owner').notNull(),challenge:integer('challenge').notNull(),seed:integer('seed').notNull(),score:integer('score').notNull(),passed:integer('passed').notNull(),concepts:text('concepts').notNull(),created:integer('created').notNull()},t=>[index('idx_attempts_owner_created').on(t.owner,t.created)]);
