@@ -1,0 +1,5 @@
+import LadSymbol from './LadSymbol';
+import type {SymbolKind} from './geometry';
+const kinds:Record<string,SymbolKind>={NO:'NO',NC:'NC',R_TRIG:'P',F_TRIG:'N',COIL:'COIL',SET:'SET',RESET:'RESET'};
+export function InstructionIcon({kind}:{kind:string}){return kinds[kind]?<svg className="lad-toolbar-symbol" width={32} height={24} viewBox="0 0 64 48" aria-hidden="true"><LadSymbol kind={kinds[kind]} x={0} y={0} incoming="#202A33" outgoing="#202A33"/></svg>:<span aria-hidden="true" className="block-icon">{kind}</span>;}
+export const instructionHelp:Record<string,string>={NO:'Normally Open Contact — TRUE when operand = 1',NC:'Normally Closed Contact — TRUE when operand = 0',R_TRIG:'P_TRIG — positive edge, TRUE for one scan',F_TRIG:'N_TRIG — negative edge, TRUE for one scan',COIL:'Coil — assign path result to BOOL output',SET:'SET — latch output TRUE while path is TRUE',RESET:'RESET — reset output FALSE while path is TRUE',TON:'TON — on-delay timer (IN, PT, Q, ET)',TOF:'TOF — off-delay timer (IN, PT, Q, ET)',TP:'TP — pulse timer (IN, PT, Q, ET)',CTU:'CTU — count rising edges (CU, R, PV, Q, CV)'};

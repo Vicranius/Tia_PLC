@@ -1,6 +1,6 @@
 export type DataType = 'BOOL'|'BYTE'|'WORD'|'DWORD'|'INT'|'DINT'|'REAL'|'TIME';
 export type Scalar = boolean|number;
-export interface Tag {name:string;type:DataType;address:string;initial:Scalar;comment:string}
+export interface Tag {inputMode?:'toggle'|'momentary';name:string;type:DataType;address:string;initial:Scalar;comment:string}
 export type Value = {kind:'literal';value:number}|{kind:'tag';tag:string}|{kind:'calc';op:'ADD'|'SUB'|'MUL'|'DIV'|'INT_TO_REAL'|'REAL_TO_INT'|'WORD_TO_INT'|'NORM_X'|'SCALE_X';a:Value;b:Value;c?:Value};
 export type Expr = {id:string;type:'NO'|'NC';tag:string}|{id:string;type:'AND'|'OR';children:Expr[]}|{id:string;type:'TON'|'TOF'|'TP';pt:number;input:Expr}|{id:string;type:'CTU';pv:number;input:Expr;reset:Expr}|{id:string;type:'R_TRIG'|'F_TRIG';input:Expr}|{id:string;type:'COMPARE';op:'=='|'<>'|'>'|'<'|'>='|'<=';a:Value;b:Value};
 export interface Output {unassigned?:boolean;type:'COIL'|'SET'|'RESET'|'MOVE';tag:string;value?:Value}

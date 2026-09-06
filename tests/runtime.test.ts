@@ -58,3 +58,14 @@ test('Blank exercise scaffold never displays or executes a preassigned coil',()=
  const n=blankNetwork();assert.equal(n.output.unassigned,true);
  const p=material(3).reference;p.blocks[0].networks=[n];assert.ok(compile(p).some(d=>d.code==='E015'));assert.throws(()=>new Runtime(p));
 });
+import {challenge} from '../src/challenges/catalog';
+test('Input behavior metadata preserves simulation semantics and round trips through parser',()=>{
+ const source=material(3).reference,configured=structuredClone(source);configured.tags.forEach(t=>{if(t.address.startsWith('%I')&&t.type==='BOOL')t.inputMode='momentary';});
+ const parsed=parseProgram(JSON.parse(JSON.stringify(configured)));assert.equal(parsed.tags[0].inputMode,'momentary');
+ const a=new Runtime(source),b=new Runtime(parsed);for(const [tag,v] of [['START',true],['START',false],['STOP',true],['STOP',false]] as const){a.inputs[tag]=b.inputs[tag]=v;assert.deepEqual(a.scan(10).values,b.scan(10).values);}
+ configured.tags[0].inputMode='invalid' as never;assert.throws(()=>parseProgram(configured));
+});
+test('Motor exercise starts with physical pushbuttons and staged conceptual hints',()=>{
+ const c=challenge(3);assert.equal(c.tags.find(t=>t.name==='START')?.inputMode,'momentary');assert.equal(c.tags.find(t=>t.name==='OVERLOAD')?.inputMode,'toggle');
+ assert.ok(!c.hints[1].includes('kendi NO kontağını'));assert.ok(c.hints[1].includes('Paralel'));
+});
