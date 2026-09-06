@@ -26,3 +26,35 @@ test('Force overrides output commit and can be released',()=>{const rt=new Runti
 import {layoutLogic,layoutRung} from '../src/ladder/geometry';
 test('Serial layout keeps every terminal on the same axis through nested branches',()=>{const a:Expr={id:'a',type:'NO',tag:'START'},b:Expr={id:'b',type:'NC',tag:'STOP'};const tree:Expr={id:'serial',type:'AND',children:[{id:'parallel',type:'OR',children:[a,b]},{id:'timer',type:'TON',pt:1000,input:a}]};const l=layoutLogic(tree);for(const c of l.children)assert.equal(c.y+c.layout.terminalY,l.terminalY);for(let i=1;i<l.children.length;i++)assert.equal(l.children[i-1].x+l.children[i-1].layout.width,l.children[i].x);const r=layoutRung({id:'n',title:'',logic:tree,output:{type:'COIL',tag:'MOTOR'}});assert.equal(r.terminalY,r.logicY+l.terminalY);assert.ok(r.coilX>=r.logicX+l.width);});
 test('Wire insertion before a selected contact preserves requested scan order',()=>{const a:Expr={id:'a',type:'NO',tag:'START'},b:Expr={id:'b',type:'NC',tag:'STOP'};const result=insert(a,a.id,b,false,true);assert.equal(result.type,'AND');if('children'in result)assert.deepEqual(result.children.map(c=>c.id),['b','a']);});
+import {symbolGeometry,LAD_GRID_X,LAD_GRID_Y,type SymbolKind} from '../src/ladder/geometry';
+import {createElement} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import LadSymbol from '../src/ladder/LadSymbol';
+import Rung from '../src/ladder/Rung';
+import {blankNetwork} from '../src/plc/model';
+const symbolKinds:SymbolKind[]=['NO','NC','P','N','COIL','SET','RESET'];
+for(const kind of symbolKinds)test(`${kind}: exact cell center and equal 22px connectors at every grid position`,()=>{
+ for(let col=0;col<12;col++)for(let row=0;row<8;row++){
+  const x=col*LAD_GRID_X,y=row*LAD_GRID_Y,g=symbolGeometry(kind,x,y);
+  assert.equal(g.cx,x+32);assert.equal(g.cy,y+24);assert.equal(g.leftWireLength,22);assert.equal(g.rightWireLength,22);
+  assert.equal(g.bodyLeft+g.bodyRight,2*g.cx);
+  const markup=renderToStaticMarkup(createElement(LadSymbol,{kind,x,y,incoming:'#000',outgoing:'#000'}));
+  assert.match(markup,new RegExp(`data-connector="left" x1="${x}" y1="${g.cy}" x2="${g.bodyLeft}" y2="${g.cy}"`));
+  assert.match(markup,new RegExp(`data-connector="right" x1="${g.bodyRight}" y1="${g.cy}" x2="${x+64}" y2="${g.cy}"`));
+ }
+});
+test('All nested branch cell origins and bus boundaries snap to grid',()=>{
+ const a:Expr={id:'a',type:'NO',tag:'A'};
+ const expr:Expr={id:'o',type:'OR',children:[a,{id:'and',type:'AND',children:[{id:'edge',type:'R_TRIG',input:{...a,id:'b'}},{id:'timer',type:'TON',pt:1000,input:{...a,id:'c'}}]}]};
+ const check=(l:ReturnType<typeof layoutLogic>)=>{assert.equal(l.width%64,0);assert.equal(l.height%48,0);assert.equal((l.terminalY-24)%48,0);for(const c of l.children){assert.equal(c.x%64,0);assert.equal(c.y%48,0);check(c.layout);}};check(layoutLogic(expr));
+});
+test('Long symbolic names and addresses cannot change any rendered electrical coordinate',()=>{
+ const network={id:'n',title:'Test',logic:{id:'a',type:'NO' as const,tag:'A'},output:{type:'COIL' as const,tag:'Q'}};
+ const render=(long:boolean)=>{const n=structuredClone(network);if(long){n.logic.tag='A'.repeat(250);n.output.tag='Q'.repeat(250);}return renderToStaticMarkup(createElement(Rung,{network:n,tags:[{name:n.logic.tag,address:long?'%I'+'9'.repeat(200)+'.0':'%I0.0',type:'BOOL',initial:false,comment:''}],trace:{},monitor:false,locked:false,selected:'',onSelect:()=>{},onWhy:()=>{},onMove:()=>{},onTag:()=>{},onInsert:()=>{}}));};
+ const conductors=(s:string)=>s.match(/<(?:line|path)\b[^>]*>/g);
+ assert.deepEqual(conductors(render(false)),conductors(render(true)));
+});
+test('Blank exercise scaffold never displays or executes a preassigned coil',()=>{
+ const n=blankNetwork();assert.equal(n.output.unassigned,true);
+ const p=material(3).reference;p.blocks[0].networks=[n];assert.ok(compile(p).some(d=>d.code==='E015'));assert.throws(()=>new Runtime(p));
+});
