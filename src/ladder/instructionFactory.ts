@@ -42,7 +42,7 @@ export function logicInstruction(kind:LogicInstruction,tags:Tag[],compareOp:'=='
  const input:Expr={id:uid(),type:'NO',tag:bool};
  if(kind==='NO'||kind==='NC')return {...input,type:kind};
  if(kind==='R_TRIG'||kind==='F_TRIG')return {id:uid(),type:kind,input};
- if(kind==='TON'||kind==='TOF'||kind==='TP')return {id:uid(),type:kind,pt:1000,input};
+ if(kind==='TON'||kind==='TOF'||kind==='TP')return {id:uid(),type:kind,instance:`${kind}_${uid().slice(0,4)}`,pt:literal(1000),input};
  if(kind==='CTU')return {id:uid(),type:kind,instance:`CTU_${uid().slice(0,4)}`,pv:literal(3),input,reset:{id:uid(),type:'NO',tag:reset}};
  if(kind==='CTD')return {id:uid(),type:kind,instance:`CTD_${uid().slice(0,4)}`,pv:literal(3),input,load:{id:uid(),type:'NO',tag:load}};
  if(kind==='CTUD')return {id:uid(),type:kind,instance:`CTUD_${uid().slice(0,4)}`,pv:literal(3),input,down:{id:uid(),type:'NO',tag:boolInputs[1]?.name??bool},reset:{id:uid(),type:'NO',tag:reset},load:{id:uid(),type:'NO',tag:load}};

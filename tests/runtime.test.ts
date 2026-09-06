@@ -136,3 +136,18 @@ test('Counter factory creates all IEC counter types with selectable PV operands'
  for(const kind of ['CTU','CTD','CTUD'] as const){const counter=logicInstruction(kind,tags);assert.equal(counter.type,kind);if('pv'in counter){assert.equal(typeof counter.instance,'string');assert.equal(typeof counter.pv,'object');}}
  const counter=logicInstruction('CTUD',tags);assert.ok('down'in counter&&'load'in counter&&'reset'in counter);
 });
+test('TON accepts a TIME tag for PT and exposes instance Q and ET operands',()=>{
+ const tags:Program['tags']=[
+  {name:'ENABLE',type:'BOOL',address:'%I0.0',initial:false,comment:''},{name:'DELAY',type:'TIME',address:'%MD0',initial:30,comment:''},{name:'TIMER_BLOCK',type:'BOOL',address:'%Q0.0',initial:false,comment:''},{name:'DONE',type:'BOOL',address:'%Q0.1',initial:false,comment:''},{name:'ELAPSED',type:'DINT',address:'%MD4',initial:0,comment:''},
+ ];
+ const program:Program={version:1,cpu:'CPU 1214C',tags,blocks:[{id:'OB1',kind:'OB',networks:[
+  {id:'timer',title:'TON',logic:{id:'ton',type:'TON',instance:'DelayTimer',pt:{kind:'tag',tag:'DELAY'},input:{id:'enable',type:'NO',tag:'ENABLE'}},output:{type:'COIL',tag:'TIMER_BLOCK'}},
+  {id:'q',title:'Q contact',logic:{id:'q-contact',type:'NO',tag:'DelayTimer.Q'},output:{type:'COIL',tag:'DONE'}},
+  {id:'et',title:'ET move',logic:{id:'always',type:'NC',tag:'DONE'},output:{type:'MOVE',tag:'ELAPSED',value:{kind:'tag',tag:'DelayTimer.ET'}}},
+ ]}]};
+ assert.deepEqual(compile(program).filter(d=>d.severity==='error'),[]);assert.doesNotThrow(()=>parseProgram(JSON.parse(JSON.stringify(program))));const rt=new Runtime(program);rt.inputs.ENABLE=true;
+ for(let i=0;i<4;i++)rt.scan(10);assert.equal(rt.outputs.DONE,true);assert.equal(rt.timers.DelayTimer.et,30);rt.inputs.ENABLE=false;rt.scan(10);assert.equal(rt.outputs.DONE,false);assert.equal(rt.timers.DelayTimer.et,0);
+});
+test('Timer factory assigns editable IEC instances and PT operand objects',()=>{
+ const tags=material(3).reference.tags;for(const kind of ['TON','TOF','TP'] as const){const timer=logicInstruction(kind,tags);assert.equal(timer.type,kind);if('pt'in timer){assert.equal(typeof timer.instance,'string');assert.equal(typeof timer.pt,'object');}}
+});

@@ -3,11 +3,13 @@ export type Scalar = boolean|number;
 export interface Tag {inputMode?:'toggle'|'momentary';name:string;type:DataType;address:string;initial:Scalar;comment:string}
 export type Value = {kind:'literal';value:number}|{kind:'tag';tag:string}|{kind:'calc';op:'ADD'|'SUB'|'MUL'|'DIV'|'INT_TO_REAL'|'REAL_TO_INT'|'WORD_TO_INT'|'NORM_X'|'SCALE_X';a:Value;b:Value;c?:Value};
 export type CounterValue=number|Value;
+export type TimerValue=number|Value;
+export type TimerExpr={id:string;type:'TON'|'TOF'|'TP';instance?:string;pt:TimerValue;input:Expr};
 export type CounterExpr=
  |{id:string;type:'CTU';instance?:string;pv:CounterValue;input:Expr;reset:Expr}
  |{id:string;type:'CTD';instance?:string;pv:CounterValue;input:Expr;load:Expr}
  |{id:string;type:'CTUD';instance?:string;pv:CounterValue;input:Expr;down:Expr;reset:Expr;load:Expr};
-export type Expr = {id:string;type:'NO'|'NC';tag:string}|{id:string;type:'AND'|'OR';children:Expr[]}|{id:string;type:'TON'|'TOF'|'TP';pt:number;input:Expr}|CounterExpr|{id:string;type:'R_TRIG'|'F_TRIG';input:Expr}|{id:string;type:'COMPARE';op:'=='|'<>'|'>'|'<'|'>='|'<=';a:Value;b:Value};
+export type Expr = {id:string;type:'NO'|'NC';tag:string}|{id:string;type:'AND'|'OR';children:Expr[]}|TimerExpr|CounterExpr|{id:string;type:'R_TRIG'|'F_TRIG';input:Expr}|{id:string;type:'COMPARE';op:'=='|'<>'|'>'|'<'|'>='|'<=';a:Value;b:Value};
 export interface Output {unassigned?:boolean;type:'COIL'|'SET'|'RESET'|'MOVE';tag:string;value?:Value}
 export interface Network {id:string;title:string;comment?:string;logic:Expr;output:Output}
 export interface Block {id:string;kind:'OB'|'FC'|'FB';networks:Network[]}

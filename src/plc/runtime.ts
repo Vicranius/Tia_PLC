@@ -4,7 +4,7 @@ import type {Program,Expr,Scalar,Trace,TimerState,CounterState,Value} from './mo
 export class Runtime {
  memory:Memory;inputs:Record<string,Scalar>={};forces:Record<string,Scalar>={};outputs:Record<string,Scalar>={};timers:Record<string,TimerState>={};counters:Record<string,CounterState>={};edges:Record<string,boolean>={};trace:Record<string,Trace>={};time=0;scans=0;before:Record<string,Scalar>={};
  constructor(public program:Program){const errors=compile(program).filter(d=>d.severity==='error');if(errors.length)throw Error(errors.map(e=>e.message).join('; '));this.memory=new Memory(program.tags);for(const t of program.tags)if(t.address.startsWith('%I'))this.inputs[t.name]=t.initial;}
- operand(name:string):Scalar{const match=/^(.+)\.(Q|QU|QD|CV)$/i.exec(name);if(match){const key=Object.keys(this.counters).find(k=>k.toLowerCase()===match[1].toLowerCase());const state=key?this.counters[key]:undefined;if(!state)return match[2].toUpperCase()==='CV'?0:false;const member=match[2].toLowerCase() as 'q'|'qu'|'qd'|'cv';return state[member];}return this.memory.read(name);}
+ operand(name:string):Scalar{const match=/^(.+)\.(Q|QU|QD|CV|ET)$/i.exec(name);if(match){const member=match[2].toLowerCase(),counterKey=Object.keys(this.counters).find(k=>k.toLowerCase()===match[1].toLowerCase()),timerKey=Object.keys(this.timers).find(k=>k.toLowerCase()===match[1].toLowerCase());if(counterKey&&member in this.counters[counterKey])return this.counters[counterKey][member as 'q'|'qu'|'qd'|'cv'];if(timerKey&&(member==='q'||member==='et'))return this.timers[timerKey][member];return member==='cv'||member==='et'?0:false;}return this.memory.read(name);}
  value(v:Value):number{if(v.kind==='literal')return v.value;if(v.kind==='tag')return Number(this.operand(v.tag));const a=this.value(v.a),b=this.value(v.b),c=v.c?this.value(v.c):0;switch(v.op){case'ADD':return a+b;case'SUB':return a-b;case'MUL':return a*b;case'DIV':if(!b)throw Error('DIV: sıfıra bölme');return a/b;case'INT_TO_REAL':return a;case'REAL_TO_INT':{const f=Math.floor(a),r=a-f;return r===.5?(f%2===0?f:f+1):Math.round(a);}case'WORD_TO_INT':{const w=((Math.trunc(a)%65536)+65536)%65536;return w>32767?w-65536:w;}case'NORM_X':if(c===a)throw Error('NORM_X: MIN = MAX');return(b-a)/(c-a);case'SCALE_X':return a+b*(c-a);}}
  evaluate(e:Expr):boolean{
  let q=false,detail='';
@@ -26,11 +26,11 @@ export class Runtime {
   this.counters[key]=s;q=s.q;
  }
  else if(e.type==='R_TRIG'||e.type==='F_TRIG'){const v=this.evaluate(e.input),prev=this.edges[e.id]??false;q=e.type==='R_TRIG'?v&&!prev:!v&&prev;this.edges[e.id]=v;detail=`önce=${prev}, şimdi=${v}, Q=${q}`;}
- else if('pt'in e){const input=this.evaluate(e.input);const s=this.timers[e.id]??{q:false,et:0,start:null,previous:false};
- if(e.type==='TON'){if(!input){s.start=null;s.et=0;s.q=false;}else{if(s.start===null)s.start=this.time;s.et=Math.min(e.pt,this.time-s.start);s.q=s.et>=e.pt;}}
- if(e.type==='TOF'){if(input){s.q=true;s.start=null;s.et=0;}else{if(s.previous)s.start=this.time;if(s.start!==null){s.et=Math.min(e.pt,this.time-s.start);s.q=s.et<e.pt;}else{s.q=false;s.et=0;}}}
- if(e.type==='TP'){if(input&&!s.previous&&s.start===null){s.start=this.time;}if(s.start!==null){s.et=Math.min(e.pt,this.time-s.start);s.q=s.et<e.pt;if(!s.q&&!input){s.start=null;s.et=0;}}else{s.q=false;s.et=0;}}
- s.previous=input;this.timers[e.id]=s;q=s.q;detail=`IN=${input} PT=T#${e.pt}ms ET=T#${s.et}ms Q=${q}`;
+ else if('pt'in e){const input=this.evaluate(e.input),pt=Math.max(0,Math.trunc(typeof e.pt==='number'?e.pt:this.value(e.pt))),key=e.instance?.trim()||e.id,s=this.timers[key]??{q:false,et:0,start:null,previous:false};
+ if(e.type==='TON'){if(!input){s.start=null;s.et=0;s.q=false;}else{if(s.start===null)s.start=this.time;s.et=Math.min(pt,this.time-s.start);s.q=s.et>=pt;}}
+ if(e.type==='TOF'){if(input){s.q=true;s.start=null;s.et=0;}else{if(s.previous)s.start=this.time;if(s.start!==null){s.et=Math.min(pt,this.time-s.start);s.q=s.et<pt;}else{s.q=false;s.et=0;}}}
+ if(e.type==='TP'){if(input&&!s.previous&&s.start===null){s.start=this.time;}if(s.start!==null){s.et=Math.min(pt,this.time-s.start);s.q=s.et<pt;if(!s.q&&!input){s.start=null;s.et=0;}}else{s.q=false;s.et=0;}}
+ s.previous=input;this.timers[key]=s;q=s.q;detail=`IN=${input} PT=T#${pt}ms ET=T#${s.et}ms Q=${q}`;
  }
  this.trace[e.id]={value:q,detail};return q;
  }
