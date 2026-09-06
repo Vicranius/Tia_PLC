@@ -15,7 +15,8 @@ export function symbolGeometry(kind:SymbolKind,x=0,y=0){
   : [`M ${bodyLeft} ${cy-10} V ${cy+10}`,`M ${bodyRight} ${cy-10} V ${cy+10}`,...(kind==='NC'?[`M ${cx-7} ${cy+10} L ${cx+7} ${cy-10}`]:[])];
  return {width,height,cx,cy,left,right,bodyLeft,bodyRight,leftWireLength:bodyLeft-left,rightWireLength:right-bodyRight,paths,letter:kind==='SET'?'S':kind==='RESET'?'R':kind==='P'?'P':kind==='N'?'N':''};
 }
-export interface PlacedLogic {layout:LogicLayout;x:number;y:number;port:'IN'|'R'}
+export type LogicPort='IN'|'CU'|'CD'|'R'|'LD';
+export interface PlacedLogic {layout:LogicLayout;x:number;y:number;port:LogicPort}
 export interface LogicLayout {expr:Expr;width:number;height:number;terminalY:number;children:PlacedLogic[];boxX?:number;resetY?:number}
 export interface RungLayout {logic:LogicLayout;logicX:number;logicY:number;terminalY:number;coilX:number;coilWidth:number;rightRailX:number;width:number;height:number}
 const X=LAD_GRID_X,Y=LAD_GRID_Y;
@@ -33,10 +34,13 @@ export function layoutLogic(expr:Expr):LogicLayout {
   return {...base,width:Math.max(...layouts.map(l=>l.width))+2*X,height:y,terminalY:layouts[0].terminalY,children};
  }
  if('input'in expr){
-  const input=layoutLogic(expr.input),children:PlacedLogic[]=[{layout:input,x:0,y:0,port:'IN'}];
+  const input=layoutLogic(expr.input),firstPort:LogicPort=expr.type==='CTU'||expr.type==='CTUD'?'CU':expr.type==='CTD'?'CD':'IN',children:PlacedLogic[]=[{layout:input,x:0,y:0,port:firstPort}];
   if(expr.type==='R_TRIG'||expr.type==='F_TRIG')return {...base,width:input.width+X,height:input.height,terminalY:input.terminalY,children,boxX:input.width};
-  let resetY:number|undefined,childWidth=input.width,height=Math.max(input.height,Y*4);
-  if('reset'in expr){const reset=layoutLogic(expr.reset),y=input.height;children.push({layout:reset,x:0,y,port:'R'});resetY=y+reset.terminalY;childWidth=Math.max(childWidth,reset.width);height=Math.max(height,y+reset.height+Y);}
+  let resetY:number|undefined,childWidth=input.width,height=Math.max(input.height,Y*4),nextY=input.height;
+  const append=(childExpr:Expr,port:LogicPort)=>{const child=layoutLogic(childExpr);children.push({layout:child,x:0,y:nextY,port});resetY=nextY+child.terminalY;nextY+=child.height;childWidth=Math.max(childWidth,child.width);height=Math.max(height,nextY+Y);};
+  if('down'in expr)append(expr.down,'CD');
+  if('reset'in expr)append(expr.reset,'R');
+  if('load'in expr)append(expr.load,'LD');
   return {...base,width:childWidth+3*X,height,terminalY:input.terminalY,children,boxX:childWidth+X};
  }
  if(expr.type==='COMPARE')return {...base,width:2*X,height:3*Y};

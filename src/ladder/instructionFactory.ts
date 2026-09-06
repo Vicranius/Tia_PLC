@@ -1,6 +1,6 @@
 import {uid,type Expr,type Output,type Tag,type Value} from '../plc/model';
 
-export type LogicInstruction='NO'|'NC'|'R_TRIG'|'F_TRIG'|'TON'|'TOF'|'TP'|'CTU'|'COMPARE';
+export type LogicInstruction='NO'|'NC'|'R_TRIG'|'F_TRIG'|'TON'|'TOF'|'TP'|'CTU'|'CTD'|'CTUD'|'COMPARE';
 export type NumericInstruction='MOVE'|'ADD'|'SUB'|'MUL'|'DIV'|'INT_TO_REAL'|'REAL_TO_INT'|'WORD_TO_INT'|'NORM_X'|'SCALE_X';
 
 const literal=(value:number):Value=>({kind:'literal',value});
@@ -36,11 +36,15 @@ export function booleanOutput(kind:'COIL'|'SET'|'RESET',tags:Tag[],current:Outpu
 export function logicInstruction(kind:LogicInstruction,tags:Tag[],compareOp:'=='|'<>'|'>'|'<'|'>='|'<='='>'):Expr{
  const bool=tags.find(t=>t.type==='BOOL'&&t.address.startsWith('%I'))?.name??tags.find(t=>t.type==='BOOL')?.name??'';
  const reset=tags.find(t=>t.name==='RESET')?.name??tags.find(t=>t.name==='STOP')?.name??bool;
+ const load=tags.find(t=>t.name==='LOAD')?.name??reset;
+ const boolInputs=tags.filter(t=>t.type==='BOOL'&&t.address.startsWith('%I'));
  const numeric=firstNumeric(tags,'RAW')?.name;
  const input:Expr={id:uid(),type:'NO',tag:bool};
  if(kind==='NO'||kind==='NC')return {...input,type:kind};
  if(kind==='R_TRIG'||kind==='F_TRIG')return {id:uid(),type:kind,input};
  if(kind==='TON'||kind==='TOF'||kind==='TP')return {id:uid(),type:kind,pt:1000,input};
- if(kind==='CTU')return {id:uid(),type:kind,pv:3,input,reset:{id:uid(),type:'NO',tag:reset}};
+ if(kind==='CTU')return {id:uid(),type:kind,instance:`CTU_${uid().slice(0,4)}`,pv:literal(3),input,reset:{id:uid(),type:'NO',tag:reset}};
+ if(kind==='CTD')return {id:uid(),type:kind,instance:`CTD_${uid().slice(0,4)}`,pv:literal(3),input,load:{id:uid(),type:'NO',tag:load}};
+ if(kind==='CTUD')return {id:uid(),type:kind,instance:`CTUD_${uid().slice(0,4)}`,pv:literal(3),input,down:{id:uid(),type:'NO',tag:boolInputs[1]?.name??bool},reset:{id:uid(),type:'NO',tag:reset},load:{id:uid(),type:'NO',tag:load}};
  return {id:uid(),type:'COMPARE',op:compareOp,a:tagValue(numeric),b:literal(0)};
 }

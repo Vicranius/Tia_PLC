@@ -6,7 +6,7 @@ import {Accordion,AccordionItem,AccordionTrigger,AccordionContent} from '@/compo
 const groups:[string,[string,string][]][]=[
  ['Bit logic operations',[['NO','Normally open contact'],['NC','Normally closed contact'],['COIL','Assignment'],['SET','Set output'],['RESET','Reset output'],['R_TRIG','Positive edge'],['F_TRIG','Negative edge']]],
  ['Timer operations',[['TON','On-delay timer'],['TOF','Off-delay timer'],['TP','Pulse timer']]],
- ['Counter operations',[['CTU','Count up']]],
+ ['Counter operations',[['CTU','Count up'],['CTD','Count down'],['CTUD','Count up/down']]],
  ['Comparator operations',[['CMP ==','Equal'],['CMP <>','Not equal'],['CMP >=','Greater or equal'],['CMP <=','Less or equal'],['CMP >','Greater than'],['CMP <','Less than']]],
  ['Math functions',[['ADD','Addition'],['SUB','Subtraction'],['MUL','Multiplication'],['DIV','Division']]],
  ['Move operations',[['MOVE','Move value']]],

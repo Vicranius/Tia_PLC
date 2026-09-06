@@ -109,3 +109,30 @@ test('Compile catches invalid operation operands before RUN',()=>{
  const p=material(18).reference,n=p.blocks[0].networks[0];n.output.value={kind:'calc',op:'DIV',a:{kind:'tag',tag:'RAW'},b:{kind:'literal',value:0}};assert.ok(compile(p).some(d=>d.code==='E013'));
  n.output.value={kind:'calc',op:'NORM_X',a:{kind:'literal',value:0},b:{kind:'tag',tag:'RAW'}};assert.ok(compile(p).some(d=>d.code==='E012'));
 });
+test('CTU, CTD and CTUD expose instance outputs as real contact operands',()=>{
+ const tags:Program['tags']=[
+  {name:'CU',type:'BOOL',address:'%I0.0',initial:false,comment:''},{name:'CD',type:'BOOL',address:'%I0.1',initial:false,comment:''},{name:'R',type:'BOOL',address:'%I0.2',initial:false,comment:''},{name:'LD',type:'BOOL',address:'%I0.3',initial:false,comment:''},{name:'PV',type:'DINT',address:'%MD10',initial:3,comment:''},
+  ...['UP_BLOCK','UP_Q','DOWN_BLOCK','DOWN_Q','BOTH_BLOCK','BOTH_QU','BOTH_QD'].map((name,i)=>({name,type:'BOOL' as const,address:`%Q0.${i}`,initial:false,comment:''})),
+ ];
+ const no=(id:string,tag:string):Expr=>({id,type:'NO',tag}),pv:Value={kind:'tag',tag:'PV'};
+ const program:Program={version:1,cpu:'CPU 1214C',tags,blocks:[{id:'OB1',kind:'OB',networks:[
+  {id:'up-block',title:'CTU',logic:{id:'up',type:'CTU',instance:'CountUp',pv,input:no('up-cu','CU'),reset:no('up-r','R')},output:{type:'COIL',tag:'UP_BLOCK'}},
+  {id:'up-q',title:'CTU Q',logic:no('up-q-contact','CountUp.Q'),output:{type:'COIL',tag:'UP_Q'}},
+  {id:'down-block',title:'CTD',logic:{id:'down',type:'CTD',instance:'CountDown',pv,input:no('down-cd','CD'),load:no('down-ld','LD')},output:{type:'COIL',tag:'DOWN_BLOCK'}},
+  {id:'down-q',title:'CTD Q',logic:no('down-q-contact','CountDown.Q'),output:{type:'COIL',tag:'DOWN_Q'}},
+  {id:'both-block',title:'CTUD',logic:{id:'both',type:'CTUD',instance:'CountBoth',pv,input:no('both-cu','CU'),down:no('both-cd','CD'),reset:no('both-r','R'),load:no('both-ld','LD')},output:{type:'COIL',tag:'BOTH_BLOCK'}},
+  {id:'both-qu',title:'CTUD QU',logic:no('both-qu-contact','CountBoth.QU'),output:{type:'COIL',tag:'BOTH_QU'}},
+  {id:'both-qd',title:'CTUD QD',logic:no('both-qd-contact','CountBoth.QD'),output:{type:'COIL',tag:'BOTH_QD'}},
+ ]}]};
+ assert.deepEqual(compile(program).filter(d=>d.severity==='error'),[]);const rt=new Runtime(program);
+ rt.inputs.LD=true;rt.inputs.R=true;rt.scan(10);assert.equal(rt.counters.CountDown.cv,3);rt.inputs.LD=false;rt.inputs.R=false;
+ for(let i=0;i<3;i++){rt.inputs.CU=true;rt.inputs.CD=true;rt.scan(10);rt.inputs.CU=false;rt.inputs.CD=false;rt.scan(10);}
+ assert.equal(rt.outputs.UP_Q,true);assert.equal(rt.outputs.DOWN_Q,true);assert.equal(rt.outputs.BOTH_QU,false);assert.equal(rt.outputs.BOTH_QD,true);
+ rt.inputs.R=true;rt.scan(10);rt.inputs.R=false;for(let i=0;i<3;i++){rt.inputs.CU=true;rt.scan(10);rt.inputs.CU=false;rt.scan(10);}assert.equal(rt.outputs.BOTH_QU,true);assert.equal(rt.outputs.BOTH_QD,false);
+ rt.inputs.CD=true;rt.scan(10);rt.inputs.CD=false;rt.scan(10);assert.equal(rt.outputs.BOTH_QU,false);
+});
+test('Counter factory creates all IEC counter types with selectable PV operands',()=>{
+ const tags=material(3).reference.tags;
+ for(const kind of ['CTU','CTD','CTUD'] as const){const counter=logicInstruction(kind,tags);assert.equal(counter.type,kind);if('pv'in counter){assert.equal(typeof counter.instance,'string');assert.equal(typeof counter.pv,'object');}}
+ const counter=logicInstruction('CTUD',tags);assert.ok('down'in counter&&'load'in counter&&'reset'in counter);
+});
