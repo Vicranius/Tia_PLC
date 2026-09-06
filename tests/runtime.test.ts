@@ -69,3 +69,9 @@ test('Motor exercise starts with physical pushbuttons and staged conceptual hint
  const c=challenge(3);assert.equal(c.tags.find(t=>t.name==='START')?.inputMode,'momentary');assert.equal(c.tags.find(t=>t.name==='OVERLOAD')?.inputMode,'toggle');
  assert.ok(!c.hints[1].includes('kendi NO kontağını'));assert.ok(c.hints[1].includes('Paralel'));
 });
+import {LAD_MIN_RUNG_CELLS} from '../src/ladder/geometry';
+test('Empty and short rungs span nine grid cells without stretching instruction cells',()=>{
+ const n=blankNetwork(),empty=layoutRung(n);assert.equal(empty.rightRailX-empty.logicX,576);assert.equal(empty.rightRailX-empty.logicX,LAD_MIN_RUNG_CELLS*LAD_GRID_X);
+ n.logic={id:'contact',type:'NO',tag:'START'};n.output.unassigned=false;const occupied=layoutRung(n);assert.equal(occupied.rightRailX,empty.rightRailX);assert.equal(occupied.logic.width,64);assert.equal(occupied.coilWidth,64);assert.equal(occupied.coilX,occupied.logicX+64);
+ n.logic={id:'long',type:'AND',children:Array.from({length:12},(_,i)=>({id:String(i),type:'NO',tag:'START'}))};const long=layoutRung(n);assert.equal(long.rightRailX,long.coilX+long.coilWidth);assert.equal(long.rightRailX%64,0);
+});

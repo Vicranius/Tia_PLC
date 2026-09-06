@@ -3,6 +3,7 @@ import type {Expr,Network} from '../plc/model';
 export const LAD_GRID_X=64;
 export const LAD_GRID_Y=48;
 export const LAD_STROKE=2;
+export const LAD_MIN_RUNG_CELLS=9;
 export type SymbolKind='NO'|'NC'|'P'|'N'|'COIL'|'SET'|'RESET';
 /** Fixed electrical cell. Labels are deliberately not an input. */
 export function symbolGeometry(kind:SymbolKind,x=0,y=0){
@@ -43,6 +44,6 @@ export function layoutLogic(expr:Expr):LogicLayout {
 }
 export function layoutRung(network:Network):RungLayout {
  const logic=layoutLogic(network.logic),logicX=LAD_GRID_X,logicY=0;
- const terminalY=logic.terminalY,coilX=logicX+logic.width,coilWidth=network.output.type==='MOVE'?3*LAD_GRID_X:LAD_GRID_X,rightRailX=coilX+coilWidth;
+ const terminalY=logic.terminalY,coilX=logicX+logic.width,coilWidth=network.output.type==='MOVE'?3*LAD_GRID_X:LAD_GRID_X,rightRailX=Math.max(logicX+LAD_MIN_RUNG_CELLS*LAD_GRID_X,coilX+coilWidth);
  return {logic,logicX,logicY,terminalY,coilX,coilWidth,rightRailX,width:rightRailX+LAD_GRID_X,height:Math.max(logic.height+(network.output.type==='MOVE'?LAD_GRID_Y:0),3*LAD_GRID_Y)};
 }
