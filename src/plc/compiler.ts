@@ -7,7 +7,7 @@ export function compile(p:Program):Diagnostic[]{
  if(tags.size!==p.tags.length)add('E005','Tag adları benzersiz olmalı');
  if(!p.blocks.some(b=>b.id==='OB1'))add('E010','Main [OB1] bulunamadı');
  const ref=(tag:string,n:string,bool=false)=>{const t=tags.get(tag);if(!t)add('E001',`Undefined tag ${tag}`,n);else if(bool&&t.type!=='BOOL')add('E006',`${tag}: BOOL gerekli`,n);};
- const value=(v:Value,n:string):void=>{if(v.kind==='tag'){ref(v.tag,n);if(tags.get(v.tag)?.type==='BOOL')add('E006',`${v.tag}: sayısal operand gerekli`,n);}if(v.kind==='calc'){value(v.a,n);value(v.b,n);if(v.c)value(v.c,n);}};
+ const value=(v:Value,n:string):void=>{if(v.kind==='tag'){ref(v.tag,n);if(tags.get(v.tag)?.type==='BOOL')add('E006',`${v.tag}: sayısal operand gerekli`,n);}if(v.kind==='calc'){value(v.a,n);value(v.b,n);if(v.c)value(v.c,n);if(['NORM_X','SCALE_X'].includes(v.op)&&!v.c)add('E012',`${v.op}: MIN, VALUE ve MAX operandları gerekli`,n);if(v.op==='DIV'&&v.b.kind==='literal'&&v.b.value===0)add('E013','DIV: sıfıra bölme',n);}};
  for(const b of p.blocks){if(!['OB1','OB100'].includes(b.id)&&b.networks.length)add('W060',`${b.id}: MVP içinde otomatik çağrılmaz`,undefined,'warning');for(const n of b.networks){
  if(n.output.unassigned)add('E015','Çıkış instruction eklenmedi',n.id);
  ref(n.output.tag,n.id,n.output.type!=='MOVE');const target=tags.get(n.output.tag);

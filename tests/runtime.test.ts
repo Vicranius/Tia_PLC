@@ -75,3 +75,37 @@ test('Empty and short rungs span nine grid cells without stretching instruction 
  n.logic={id:'contact',type:'NO',tag:'START'};n.output.unassigned=false;const occupied=layoutRung(n);assert.equal(occupied.rightRailX,empty.rightRailX);assert.equal(occupied.logic.width,64);assert.equal(occupied.coilWidth,64);assert.equal(occupied.coilX,occupied.logicX+64);
  n.logic={id:'long',type:'AND',children:Array.from({length:12},(_,i)=>({id:String(i),type:'NO',tag:'START'}))};const long=layoutRung(n);assert.equal(long.rightRailX,long.coilX+long.coilWidth);assert.equal(long.rightRailX%64,0);
 });
+import type {Program,Value} from '../src/plc/model';
+import {booleanOutput,defaultOperationValue,logicInstruction,numericOutput} from '../src/ladder/instructionFactory';
+test('Every numeric operation in the Instructions pane executes with PLC operands',()=>{
+ const tags:Program['tags']=[
+  {name:'START',type:'BOOL',address:'%I0.0',initial:true,comment:''},
+  {name:'MOTOR',type:'BOOL',address:'%Q0.0',initial:false,comment:''},
+  {name:'RAW',type:'INT',address:'%IW64',initial:100,comment:''},
+  {name:'WORD_IN',type:'WORD',address:'%IW66',initial:65535,comment:''},
+  {name:'REAL_IN',type:'REAL',address:'%ID68',initial:2.5,comment:''},
+  {name:'TEMP',type:'REAL',address:'%MD20',initial:0,comment:''},
+  ...Array.from({length:8},(_,i)=>({name:`R${i}`,type:'REAL' as const,address:`%MD${100+i*4}`,initial:0,comment:''})),
+  {name:'I0',type:'INT',address:'%MW200',initial:0,comment:''},
+  {name:'I1',type:'INT',address:'%MW202',initial:0,comment:''},
+ ];
+ const lit=(value:number):Value=>({kind:'literal',value}),tag=(name:string):Value=>({kind:'tag',tag:name}),calc=(op:Extract<Value,{kind:'calc'}>['op'],a:Value,b:Value,c?:Value):Value=>({kind:'calc',op,a,b,...(c?{c}:{})});
+ const values:[string,Value][]=[
+  ['R0',tag('RAW')],['R1',calc('ADD',tag('RAW'),lit(5))],['R2',calc('SUB',tag('RAW'),lit(5))],['R3',calc('MUL',tag('RAW'),lit(2))],['R4',calc('DIV',tag('RAW'),lit(4))],['R5',calc('INT_TO_REAL',tag('RAW'),lit(0))],['I0',calc('REAL_TO_INT',tag('REAL_IN'),lit(0))],['I1',calc('WORD_TO_INT',tag('WORD_IN'),lit(0))],['R6',calc('NORM_X',lit(0),tag('RAW'),lit(200))],['R7',calc('SCALE_X',lit(0),lit(.5),lit(150))],
+ ];
+ const program:Program={version:1,cpu:'CPU 1214C',tags,blocks:[{id:'OB1',kind:'OB',networks:values.map(([target,value],i)=>({id:`n${i}`,title:`op${i}`,logic:{id:`e${i}`,type:'NO',tag:'START'},output:{type:'MOVE',tag:target,value}}))}]};
+ assert.deepEqual(compile(program).filter(d=>d.severity==='error'),[]);const rt=new Runtime(program);rt.scan(10);
+ assert.deepEqual(['R0','R1','R2','R3','R4','R5','I0','I1','R6','R7'].map(name=>rt.memory.read(name)),[100,105,95,200,25,100,2,-1,.5,75]);
+});
+test('Instruction factory creates usable TIA-style defaults for every catalog group',()=>{
+ const tags=material(3).reference.tags,current={type:'MOVE' as const,tag:'TEMP',value:{kind:'tag' as const,tag:'RAW'}};
+ for(const kind of ['MOVE','ADD','SUB','MUL','DIV','INT_TO_REAL','REAL_TO_INT','WORD_TO_INT','NORM_X','SCALE_X'] as const){const output=numericOutput(kind,tags,current);assert.equal(output.type,'MOVE');assert.equal(output.tag,'TEMP');assert.ok(output.value);}
+ const scale=defaultOperationValue('SCALE_X',tags);assert.equal(scale.kind,'calc');if(scale.kind==='calc'){assert.equal(scale.op,'SCALE_X');assert.ok(scale.c);assert.equal(scale.b.kind,'calc');}
+ for(const kind of ['COIL','SET','RESET'] as const)assert.equal(booleanOutput(kind,tags,current).tag,'MOTOR');
+ for(const kind of ['NO','NC','R_TRIG','F_TRIG','TON','TOF','TP','CTU'] as const)assert.equal(logicInstruction(kind,tags).type,kind);
+ for(const op of ['==','<>','>=','<=','>','<'] as const){const expr=logicInstruction('COMPARE',tags,op);assert.equal(expr.type,'COMPARE');if(expr.type==='COMPARE')assert.equal(expr.op,op);}
+});
+test('Compile catches invalid operation operands before RUN',()=>{
+ const p=material(18).reference,n=p.blocks[0].networks[0];n.output.value={kind:'calc',op:'DIV',a:{kind:'tag',tag:'RAW'},b:{kind:'literal',value:0}};assert.ok(compile(p).some(d=>d.code==='E013'));
+ n.output.value={kind:'calc',op:'NORM_X',a:{kind:'literal',value:0},b:{kind:'tag',tag:'RAW'}};assert.ok(compile(p).some(d=>d.code==='E012'));
+});
