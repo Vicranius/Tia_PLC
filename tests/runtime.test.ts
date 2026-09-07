@@ -89,7 +89,7 @@ test('Empty and short rungs span nine grid cells without stretching instruction 
 });
 import type {Program,Value} from '../src/plc/model';
 import {booleanOutput,defaultOperationValue,logicInstruction,numericOutput} from '../src/ladder/instructionFactory';
-test('New timers and counters have inert empty pins and expand only when wired',()=>{
+test('New timers and counters connect main inputs while control pins stay empty',()=>{
  const tags=material(3).reference.tags;
  for(const kind of ['TON','TOF','TP','CTU','CTD','CTUD'] as const){
   const block=logicInstruction(kind,tags);assert.ok('input'in block);
@@ -98,7 +98,7 @@ test('New timers and counters have inert empty pins and expand only when wired',
   const p=material(3).reference;p.blocks[0].networks[0].logic=block;
   assert.doesNotThrow(()=>parseProgram(JSON.parse(JSON.stringify(p))));
   const rt=new Runtime(p);rt.inputs.START=true;rt.scan(10);
-  assert.equal(rt.trace[block.input.id].value,false);
+  assert.equal(rt.trace[block.input.id].value,true);
   if('reset'in block){
    const before=layoutLogic(block);
    const wired=insert(block,block.reset.id,{id:'added-reset',type:'NO',tag:'STOP'});
