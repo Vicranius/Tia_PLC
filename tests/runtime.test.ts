@@ -6,7 +6,7 @@ import {Runtime} from '../src/plc/runtime';
 import {Memory} from '../src/plc/memory';
 import {parseProgram,compile} from '../src/plc/compiler';
 import {Plant} from '../src/simulation/conveyor';
-import {insert,replace,remove,moveNode} from '../src/ladder/editing';
+import {find,insert,replace,remove,moveNode} from '../src/ladder/editing';
 import type {Expr} from '../src/plc/model';
 for(let id=1;id<=20;id++)for(const seed of[0,1,2,3])test(`Reference ${id} / seed ${seed}`,()=>{const m=validated(id,seed);assert.ok(m.suites.every(s=>execute(m.reference,s).pass));assert.equal(evaluate(m.reference,id,seed).score,100);});
 test('Seal-in missing is detected and explained',()=>{const m=material(3);const n=m.reference.blocks[0].networks[0];assert.equal(n.logic.type,'AND');if('children'in n.logic)n.logic.children[2]={id:'broken',type:'NO',tag:'START'};const r=evaluate(m.reference,3,0);assert.equal(r.passed,false);assert.ok(r.results.find(x=>x.name==='Seal-in'&&!x.pass));});
@@ -15,6 +15,17 @@ test('Identical input histories produce identical runtime states',()=>{const p=m
 test('Memory aliases, signed words, big endian and REAL',()=>{const mem=new Memory([{name:'W',type:'WORD',address:'%MW10',initial:0,comment:''},{name:'B',type:'BOOL',address:'%M10.0',initial:false,comment:''},{name:'I',type:'INT',address:'%MW10',initial:0,comment:''},{name:'R',type:'REAL',address:'%MD20',initial:0,comment:''}]);mem.set('W',256);assert.equal(mem.read('B'),true);mem.set('I',-1);assert.equal(mem.read('W'),65535);mem.set('R',3.25);assert.equal(mem.read('R'),3.25);assert.throws(()=>mem.set('I',40000));});
 test('TON first trigger has ET=0; reset and exact boundary',()=>{const rt=new Runtime(material(7).reference);rt.inputs.START=true;rt.scan(10);assert.equal(Object.values(rt.timers)[0].et,0);for(let i=0;i<99;i++)rt.scan(10);assert.equal(rt.memory.read('MOTOR'),false);rt.scan(10);assert.equal(rt.memory.read('MOTOR'),true);rt.inputs.START=false;rt.scan(10);assert.equal(Object.values(rt.timers)[0].et,0);});
 test('CTU samples once per edge and reset wins',()=>{const rt=new Runtime(material(10).reference);rt.inputs.SENSOR=true;for(let i=0;i<10;i++)rt.scan(10);assert.equal(Object.values(rt.counters)[0].cv,1);rt.inputs.RESET=true;rt.scan(10);assert.equal(Object.values(rt.counters)[0].cv,0);});
+test('Counter control ports support contact editing without changing the count path',()=>{
+ const no=(id:string,tag:string):Expr=>({id,type:'NO',tag});
+ const root:Expr={id:'counter',type:'CTUD',instance:'C1',pv:3,input:no('cu','CU'),down:no('cd','CD'),reset:no('r','RESET'),load:no('ld','LOAD')};
+ const resetSeries=insert(root,'r',no('safety','SAFETY'));
+ assert.ok(find(resetSeries,'safety'));assert.equal(find(resetSeries,'cu')?.id,'cu');assert.equal(find(resetSeries,'cd')?.id,'cd');assert.equal(find(resetSeries,'ld')?.id,'ld');
+ const loadParallel=insert(resetSeries,'ld',no('load2','LOAD2'),true);
+ assert.ok(find(loadParallel,'load2'));assert.equal(find(loadParallel,'safety')?.id,'safety');
+ const renamed=replace(loadParallel,'cd',e=>({...e,tag:'DOWN_PULSE'} as Expr));
+ assert.equal((find(renamed,'cd') as {tag:string}).tag,'DOWN_PULSE');
+ const removed=remove(renamed,'load2');assert.equal(find(removed,'load2'),undefined);assert.ok(find(removed,'ld'));
+});
 test('Compiler rejects unknown tags and input writes',()=>{const p=material(3).reference;p.blocks[0].networks[0].output.tag='START';assert.ok(compile(p).some(d=>d.code==='E009'));p.blocks[0].networks[0].output.tag='MISSING';assert.ok(compile(p).some(d=>d.code==='E001'));});
 test('Parser bounds malformed AST',()=>{assert.throws(()=>parseProgram({version:1,tags:[],blocks:[{id:'OB1',kind:'OB',networks:[{}]}],cpu:'1214'}));assert.throws(()=>parseProgram({...material(3).reference,tags:[{name:'A',address:'%I0.0',type:'BOOL',initial:1,comment:''}]}));});
 test('Closed-loop conveyor reaches sensor and stops',()=>{const rt=new Runtime(material(11).reference),plant=new Plant();rt.inputs.START=true;for(let i=0;i<500;i++){rt.inputs.SENSOR=plant.sensor();rt.scan(10);plant.step(10,rt.outputs);}assert.equal(plant.sensor(),true);assert.equal(rt.outputs.CONVEYOR,false);});
