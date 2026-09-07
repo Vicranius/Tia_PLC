@@ -37,7 +37,7 @@ export function layoutLogic(expr:Expr):LogicLayout {
   const input=layoutLogic(expr.input),firstPort:LogicPort=expr.type==='CTU'||expr.type==='CTUD'?'CU':expr.type==='CTD'?'CD':'IN',children:PlacedLogic[]=[{layout:input,x:0,y:0,port:firstPort}];
   if(expr.type==='R_TRIG'||expr.type==='F_TRIG')return {...base,width:input.width+X,height:input.height,terminalY:input.terminalY,children,boxX:input.width};
   let resetY:number|undefined,childWidth=input.width,height=Math.max(input.height,Y*4),nextY=input.height;
-  const append=(childExpr:Expr,port:LogicPort)=>{const child=layoutLogic(childExpr);children.push({layout:child,x:0,y:nextY,port});resetY=nextY+child.terminalY;nextY+=child.height;childWidth=Math.max(childWidth,child.width);height=Math.max(height,nextY+Y);};
+  const append=(childExpr:Expr,port:LogicPort)=>{const child=layoutLogic(childExpr),blank='children'in childExpr&&childExpr.pin&&childExpr.children.length===0;const previous=children[children.length-1];const pinY=blank?previous.y+previous.layout.terminalY+Y/2:Math.ceil(nextY/Y)*Y+child.terminalY;const childY=pinY-child.terminalY;children.push({layout:child,x:0,y:childY,port});resetY=pinY;nextY=blank?pinY+Y/2:childY+child.height;childWidth=Math.max(childWidth,child.width);height=Math.max(height,nextY+Y);};
   if('down'in expr)append(expr.down,'CD');
   if('reset'in expr)append(expr.reset,'R');
   if('load'in expr)append(expr.load,'LD');

@@ -23,6 +23,7 @@ export default function Rung({network,tags,trace,monitor,locked,selected,onSelec
  function logicView(l:LogicLayout,x:number,y:number,powered:boolean):React.ReactNode{
   const e=l.expr,ty=y+l.terminalY,q=!!trace[e.id]?.value;
   if('children'in e){
+   if(!l.children.length&&e.pin)return <g key={e.id} role="button" tabIndex={0} aria-label="Boş pin: kontak ekle" onClick={()=>onSelect(e.id)} onKeyDown={event=>{if(event.key==='Enter')onSelect(e.id);}}><rect x={x} y={ty-11} width={l.width} height={22} fill={selected===e.id?'#deeffb':'transparent'}/><text x={x+l.width-4} y={ty+4} textAnchor="end">false</text></g>;
    if(!l.children.length)return <g key={e.id} data-expr-id={e.id} role="button" tabIndex={0} aria-label="Boş yol: eleman eklemek için seç" onClick={()=>onSelect(e.id)} onKeyDown={ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();onSelect(e.id);}}}>{wire(x,ty,x+l.width,ty,false)}<rect x={x} y={ty-10} width={l.width} height={20} fill="transparent"/><path className="insertion-marker" d={`M ${x+LAD_GRID_X/2-6} ${ty-9} h -5 v 18 h 5 M ${x+LAD_GRID_X/2+6} ${ty-9} h 5 v 18 h -5`} fill="none" stroke="#3186bc" strokeWidth={1.5}/></g>;
    if(e.type==='AND'){let incoming=powered;return <g key={e.id}>{l.children.map(child=>{const p=incoming;incoming=incoming&&!!trace[child.layout.expr.id]?.value;return logicView(child.layout,x+child.x,y+child.y,p);})}</g>;}
    const left=x+LAD_GRID_X,right=x+l.width-LAD_GRID_X,first=ty,last=y+l.children[l.children.length-1].y+l.children[l.children.length-1].layout.terminalY;

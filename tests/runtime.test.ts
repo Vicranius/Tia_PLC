@@ -89,6 +89,24 @@ test('Empty and short rungs span nine grid cells without stretching instruction 
 });
 import type {Program,Value} from '../src/plc/model';
 import {booleanOutput,defaultOperationValue,logicInstruction,numericOutput} from '../src/ladder/instructionFactory';
+test('New timers and counters have inert empty pins and expand only when wired',()=>{
+ const tags=material(3).reference.tags;
+ for(const kind of ['TON','TOF','TP','CTU','CTD','CTUD'] as const){
+  const block=logicInstruction(kind,tags);assert.ok('input'in block);
+  if(!('input'in block))return;
+  assert.ok('children'in block.input&&block.input.children.length===0&&block.input.pin);
+  const p=material(3).reference;p.blocks[0].networks[0].logic=block;
+  assert.doesNotThrow(()=>parseProgram(JSON.parse(JSON.stringify(p))));
+  const rt=new Runtime(p);rt.inputs.START=true;rt.scan(10);
+  assert.equal(rt.trace[block.input.id].value,false);
+  if('reset'in block){
+   const before=layoutLogic(block);
+   const wired=insert(block,block.reset.id,{id:'added-reset',type:'NO',tag:'STOP'});
+   assert.ok(layoutLogic(wired).height>before.height);
+   assert.equal(find(wired,'added-reset')?.id,'added-reset');
+  }
+ }
+});
 test('Every numeric operation in the Instructions pane executes with PLC operands',()=>{
  const tags:Program['tags']=[
   {name:'START',type:'BOOL',address:'%I0.0',initial:true,comment:''},

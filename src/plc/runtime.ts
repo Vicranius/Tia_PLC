@@ -9,7 +9,7 @@ export class Runtime {
  evaluate(e:Expr):boolean{
  let q=false,detail='';
  if(e.type==='NO'||e.type==='NC'){const v=Boolean(this.operand(e.tag));q=e.type==='NO'?v:!v;detail=`${e.tag} = ${v} → ${e.type} = ${q}`;}
- else if('children'in e){const states=e.children.map(x=>this.evaluate(x));q=e.type==='AND'?states.every(Boolean):states.some(Boolean);detail=`${states.join(` ${e.type} `)} = ${q}`;}
+ else if('children'in e){const states=e.children.map(x=>this.evaluate(x));q=e.pin&&states.length===0?false:e.type==='AND'?states.every(Boolean):states.some(Boolean);detail=`${states.join(` ${e.type} `)} = ${q}`;}
  else if(e.type==='COMPARE'){const a=this.value(e.a),b=this.value(e.b);q=({'==':a===b,'<>':a!==b,'>':a>b,'<':a<b,'>=':a>=b,'<=':a<=b})[e.op];detail=`${a} ${e.op} ${b} = ${q}`;}
  else if(e.type==='CTU'||e.type==='CTD'||e.type==='CTUD'){
   const key=e.instance?.trim()||e.id,pv=Math.trunc(typeof e.pv==='number'?e.pv:this.value(e.pv)),up=this.evaluate(e.input);
