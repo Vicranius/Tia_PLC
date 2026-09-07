@@ -41,7 +41,7 @@ export function layoutLogic(expr:Expr):LogicLayout {
   if('down'in expr)append(expr.down,'CD');
   if('reset'in expr)append(expr.reset,'R');
   if('load'in expr)append(expr.load,'LD');
-  return {...base,width:childWidth+3*X,height,terminalY:input.terminalY,children,boxX:childWidth+X};
+  return {...base,width:childWidth+3*X,height:Math.max(height,(resetY??input.terminalY)+2*Y),terminalY:input.terminalY,children,boxX:childWidth+X,resetY};
  }
  if(expr.type==='COMPARE')return {...base,width:2*X,height:3*Y};
  return base;
