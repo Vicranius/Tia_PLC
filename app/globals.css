@@ -28,6 +28,7 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#c5c5c6;color:#25
 @media(max-width:1100px){.workspace.integrated{grid-template-columns:210px minmax(350px,1fr) 250px}.workspace.integrated.wide-ladder{grid-template-columns:210px minmax(350px,1fr)}}
 
 .inline-tag input{width:180px;height:25px;background:white;border:1px solid #438bbb;color:#172b40;font:12px Segoe UI;padding:2px 5px}.rung-tag text{pointer-events:none}.rung-tag:hover rect{fill:#e2f0fb}.rung-svg .rung-hit{pointer-events:all}
+.inline-tag small{display:block;width:195px;padding:2px 4px;background:#fff;color:#56616d;font:10px Segoe UI}.rung-svg .operand-hit{pointer-events:all;cursor:text}.rung-svg .operand-hit:hover{fill:#d8ebf7;fill-opacity:.55;stroke:#168ac0;stroke-dasharray:2 2}
 
 .wire-slot path{opacity:0;pointer-events:none}.wire-slot:hover path,.wire-slot:focus path{opacity:1}
 

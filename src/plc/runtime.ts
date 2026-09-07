@@ -23,14 +23,14 @@ export class Runtime {
    if(reset)s.cv=0;else if(load)s.cv=pv;else if(upEdge!==downEdge)s.cv=Math.max(-2147483648,Math.min(2147483647,s.cv+(upEdge?1:-1)));
    s.previous=up;s.previousDown=down;s.qu=s.cv>=pv;s.qd=s.cv<=0;s.q=s.qu;detail=`CU=${up} CD=${down} R=${reset} LD=${load} CV=${s.cv} PV=${pv} QU=${s.qu} QD=${s.qd}`;
   }
-  this.counters[key]=s;q=s.q;
+  this.counters[key]=s;if(e.cvTag)this.memory.set(e.cvTag,s.cv);q=s.q;
  }
  else if(e.type==='R_TRIG'||e.type==='F_TRIG'){const v=this.evaluate(e.input),prev=this.edges[e.id]??false;q=e.type==='R_TRIG'?v&&!prev:!v&&prev;this.edges[e.id]=v;detail=`önce=${prev}, şimdi=${v}, Q=${q}`;}
  else if('pt'in e){const input=this.evaluate(e.input),pt=Math.max(0,Math.trunc(typeof e.pt==='number'?e.pt:this.value(e.pt))),key=e.instance?.trim()||e.id,s=this.timers[key]??{q:false,et:0,start:null,previous:false};
  if(e.type==='TON'){if(!input){s.start=null;s.et=0;s.q=false;}else{if(s.start===null)s.start=this.time;s.et=Math.min(pt,this.time-s.start);s.q=s.et>=pt;}}
  if(e.type==='TOF'){if(input){s.q=true;s.start=null;s.et=0;}else{if(s.previous)s.start=this.time;if(s.start!==null){s.et=Math.min(pt,this.time-s.start);s.q=s.et<pt;}else{s.q=false;s.et=0;}}}
  if(e.type==='TP'){if(input&&!s.previous&&s.start===null){s.start=this.time;}if(s.start!==null){s.et=Math.min(pt,this.time-s.start);s.q=s.et<pt;if(!s.q&&!input){s.start=null;s.et=0;}}else{s.q=false;s.et=0;}}
- s.previous=input;this.timers[key]=s;q=s.q;detail=`IN=${input} PT=T#${pt}ms ET=T#${s.et}ms Q=${q}`;
+ s.previous=input;this.timers[key]=s;if(e.etTag)this.memory.set(e.etTag,s.et);q=s.q;detail=`IN=${input} PT=T#${pt}ms ET=T#${s.et}ms Q=${q}`;
  }
  this.trace[e.id]={value:q,detail};return q;
  }

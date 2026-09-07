@@ -32,6 +32,7 @@ import {renderToStaticMarkup} from 'react-dom/server';
 import LadSymbol from '../src/ladder/LadSymbol';
 import Rung from '../src/ladder/Rung';
 import {blankNetwork} from '../src/plc/model';
+import {formatTimeOperand,numericOperand,timeOperand} from '../src/ladder/inlineOperands';
 const symbolKinds:SymbolKind[]=['NO','NC','P','N','COIL','SET','RESET'];
 for(const kind of symbolKinds)test(`${kind}: exact cell center and equal 22px connectors at every grid position`,()=>{
  for(let col=0;col<12;col++)for(let row=0;row<8;row++){
@@ -50,7 +51,7 @@ test('All nested branch cell origins and bus boundaries snap to grid',()=>{
 });
 test('Long symbolic names and addresses cannot change any rendered electrical coordinate',()=>{
  const network={id:'n',title:'Test',logic:{id:'a',type:'NO' as const,tag:'A'},output:{type:'COIL' as const,tag:'Q'}};
- const render=(long:boolean)=>{const n=structuredClone(network);if(long){n.logic.tag='A'.repeat(250);n.output.tag='Q'.repeat(250);}return renderToStaticMarkup(createElement(Rung,{network:n,tags:[{name:n.logic.tag,address:long?'%I'+'9'.repeat(200)+'.0':'%I0.0',type:'BOOL',initial:false,comment:''}],trace:{},monitor:false,locked:false,selected:'',onSelect:()=>{},onWhy:()=>{},onMove:()=>{},onTag:()=>{},onInsert:()=>{}}));};
+ const render=(long:boolean)=>{const n=structuredClone(network);if(long){n.logic.tag='A'.repeat(250);n.output.tag='Q'.repeat(250);}return renderToStaticMarkup(createElement(Rung,{network:n,tags:[{name:n.logic.tag,address:long?'%I'+'9'.repeat(200)+'.0':'%I0.0',type:'BOOL',initial:false,comment:''}],trace:{},monitor:false,locked:false,selected:'',onSelect:()=>{},onWhy:()=>{},onMove:()=>{},onTag:()=>{},onOperand:()=>{},onInsert:()=>{}}));};
  const conductors=(s:string)=>s.match(/<(?:line|path)\b[^>]*>/g);
  assert.deepEqual(conductors(render(false)),conductors(render(true)));
 });
@@ -150,4 +151,37 @@ test('TON accepts a TIME tag for PT and exposes instance Q and ET operands',()=>
 });
 test('Timer factory assigns editable IEC instances and PT operand objects',()=>{
  const tags=material(3).reference.tags;for(const kind of ['TON','TOF','TP'] as const){const timer=logicInstruction(kind,tags);assert.equal(timer.type,kind);if('pt'in timer){assert.equal(typeof timer.instance,'string');assert.equal(typeof timer.pt,'object');}}
+});
+test('TIA-style inline operands parse TIME literals, numeric literals and tags',()=>{
+ assert.deepEqual(timeOperand('T#1m_30s'),{kind:'literal',value:90000});
+ assert.deepEqual(timeOperand('T#500ms'),{kind:'literal',value:500});
+ assert.deepEqual(timeOperand('DELAY'),{kind:'tag',tag:'DELAY'});
+ assert.deepEqual(numericOperand('12'),{kind:'literal',value:12});
+ assert.deepEqual(numericOperand('COUNT_LIMIT'),{kind:'tag',tag:'COUNT_LIMIT'});
+ assert.equal(formatTimeOperand(timeOperand('T#3s')), 'T#3000ms');
+});
+test('Timer ET and counter CV pins can write to assigned PLC tags',()=>{
+ const tags:Program['tags']=[
+  {name:'ENABLE',type:'BOOL',address:'%I0.0',initial:true,comment:''},
+  {name:'CU',type:'BOOL',address:'%I0.1',initial:false,comment:''},
+  {name:'R',type:'BOOL',address:'%I0.2',initial:false,comment:''},
+  {name:'ET_VALUE',type:'TIME',address:'%MD0',initial:0,comment:''},
+  {name:'CV_VALUE',type:'DINT',address:'%MD4',initial:0,comment:''},
+  {name:'TQ',type:'BOOL',address:'%Q0.0',initial:false,comment:''},
+  {name:'CQ',type:'BOOL',address:'%Q0.1',initial:false,comment:''},
+ ];
+ const program:Program={version:1,cpu:'CPU 1214C',tags,blocks:[{id:'OB1',kind:'OB',networks:[
+  {id:'timer-map',title:'Timer',logic:{id:'tm',type:'TON',instance:'T1',pt:30,etTag:'ET_VALUE',input:{id:'en',type:'NO',tag:'ENABLE'}},output:{type:'COIL',tag:'TQ'}},
+  {id:'counter-map',title:'Counter',logic:{id:'ct',type:'CTU',instance:'C1',pv:3,cvTag:'CV_VALUE',input:{id:'cu',type:'NO',tag:'CU'},reset:{id:'reset',type:'NO',tag:'R'}},output:{type:'COIL',tag:'CQ'}},
+ ]}]};
+ assert.deepEqual(compile(program).filter(d=>d.severity==='error'),[]);
+ assert.doesNotThrow(()=>parseProgram(JSON.parse(JSON.stringify(program))));
+ const rt=new Runtime(program);rt.inputs.ENABLE=true;rt.scan(10);rt.scan(10);assert.equal(rt.memory.read('ET_VALUE'),10);
+ rt.inputs.CU=true;rt.scan(10);assert.equal(rt.memory.read('CV_VALUE'),1);
+});
+test('Timer and counter blocks expose double-click operand targets',()=>{
+ const tags=material(3).reference.tags;
+ const timer={id:'n',title:'Timer',logic:{id:'t',type:'TON' as const,instance:'T1',pt:1000,input:{id:'a',type:'NO' as const,tag:'START'}},output:{type:'COIL' as const,tag:'MOTOR'}};
+ const markup=renderToStaticMarkup(createElement(Rung,{network:timer,tags,trace:{},monitor:false,locked:false,selected:'',onSelect:()=>{},onWhy:()=>{},onMove:()=>{},onTag:()=>{},onOperand:()=>{},onInsert:()=>{}}));
+ assert.match(markup,/aria-label="PT operandını düzenle"/);assert.match(markup,/aria-label="ET çıkış tagini düzenle"/);
 });
