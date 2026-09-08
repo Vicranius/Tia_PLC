@@ -34,15 +34,11 @@ export function booleanOutput(kind:'COIL'|'SET'|'RESET',tags:Tag[],current:Outpu
 }
 
 export function logicInstruction(kind:LogicInstruction,tags:Tag[],compareOp:'=='|'<>'|'>'|'<'|'>='|'<='='>'):Expr{
- const bool=tags.find(t=>t.type==='BOOL'&&t.address.startsWith('%I'))?.name??tags.find(t=>t.type==='BOOL')?.name??'';
  const empty=():Expr=>({id:uid(),type:'AND',children:[],pin:true});
- const reset=tags.find(t=>t.name==='RESET')?.name??tags.find(t=>t.name==='STOP')?.name??bool;
- const load=tags.find(t=>t.name==='LOAD')?.name??reset;
- const boolInputs=tags.filter(t=>t.type==='BOOL'&&t.address.startsWith('%I'));
  const numeric=firstNumeric(tags,'RAW')?.name;
- const input:Expr={id:uid(),type:'NO',tag:bool};
+ const input:Expr={id:uid(),type:'NO',tag:''};
  if(kind==='NO'||kind==='NC')return {...input,type:kind};
- if(kind==='R_TRIG'||kind==='F_TRIG')return {id:uid(),type:kind,input};
+ if(kind==='R_TRIG'||kind==='F_TRIG')return {id:uid(),type:kind==='R_TRIG'?'P':'N',tag:''};
  if(kind==='TON'||kind==='TOF'||kind==='TP')return {id:uid(),type:kind,instance:`${kind}_${uid().slice(0,4)}`,pt:literal(1000),input:empty()};
  if(kind==='CTU')return {id:uid(),type:kind,instance:`CTU_${uid().slice(0,4)}`,pv:literal(3),input:empty(),reset:empty()};
  if(kind==='CTD')return {id:uid(),type:kind,instance:`CTD_${uid().slice(0,4)}`,pv:literal(3),input:empty(),load:empty()};

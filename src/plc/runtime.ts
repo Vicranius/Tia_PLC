@@ -13,6 +13,7 @@ export class Runtime {
  this.trace[e.id]={value:false,incoming,signal:false,detail:''};
  let q=false,detail='';
  if(e.type==='NO'||e.type==='NC'){const v=Boolean(this.operand(e.tag));q=e.type==='NO'?v:!v;detail=`${e.tag} = ${v} → ${e.type} = ${q}`;}
+ else if(e.type==='P'||e.type==='N'){const v=Boolean(this.operand(e.tag)),previous=this.edges[e.id]??false;q=e.type==='P'?v&&!previous:!v&&previous;this.edges[e.id]=v;detail=`${e.tag}: ${previous} → ${v}, ${e.type} = ${q}`;}
  else if('children'in e){let feed=incoming;const states=e.children.map(x=>{const result=this.evaluate(x,e.type==='AND'?feed:incoming);if(e.type==='AND')feed=feed&&result;return result;});q=e.pin&&states.length===0?false:e.type==='AND'?states.every(Boolean):states.some(Boolean);detail=`${states.join(` ${e.type} `)} = ${q}`;}
  else if(e.type==='COMPARE'){const a=this.value(e.a),b=this.value(e.b);q=({'==':a===b,'<>':a!==b,'>':a>b,'<':a<b,'>=':a>=b,'<=':a<=b})[e.op];detail=`${a} ${e.op} ${b} = ${q}`;}
  else if(e.type==='CTU'||e.type==='CTD'||e.type==='CTUD'){

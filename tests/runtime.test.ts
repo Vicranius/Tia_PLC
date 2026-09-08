@@ -134,7 +134,7 @@ test('Instruction factory creates usable TIA-style defaults for every catalog gr
  for(const kind of ['MOVE','ADD','SUB','MUL','DIV','INT_TO_REAL','REAL_TO_INT','WORD_TO_INT','NORM_X','SCALE_X'] as const){const output=numericOutput(kind,tags,current);assert.equal(output.type,'MOVE');assert.equal(output.tag,'TEMP');assert.ok(output.value);}
  const scale=defaultOperationValue('SCALE_X',tags);assert.equal(scale.kind,'calc');if(scale.kind==='calc'){assert.equal(scale.op,'SCALE_X');assert.ok(scale.c);assert.equal(scale.b.kind,'calc');}
  for(const kind of ['COIL','SET','RESET'] as const)assert.equal(booleanOutput(kind,tags,current).tag,'MOTOR');
- for(const kind of ['NO','NC','R_TRIG','F_TRIG','TON','TOF','TP','CTU'] as const)assert.equal(logicInstruction(kind,tags).type,kind);
+ for(const kind of ['NO','NC','R_TRIG','F_TRIG','TON','TOF','TP','CTU'] as const)assert.equal(logicInstruction(kind,tags).type,kind==='R_TRIG'?'P':kind==='F_TRIG'?'N':kind);
  for(const op of ['==','<>','>=','<=','>','<'] as const){const expr=logicInstruction('COMPARE',tags,op);assert.equal(expr.type,'COMPARE');if(expr.type==='COMPARE')assert.equal(expr.op,op);}
 });
 test('Compile catches invalid operation operands before RUN',()=>{
@@ -215,4 +215,18 @@ test('Timer and counter blocks expose double-click operand targets',()=>{
  const timer={id:'n',title:'Timer',logic:{id:'t',type:'TON' as const,instance:'T1',pt:1000,input:{id:'a',type:'NO' as const,tag:'START'}},output:{type:'COIL' as const,tag:'MOTOR'}};
  const markup=renderToStaticMarkup(createElement(Rung,{network:timer,tags,trace:{},monitor:false,locked:false,selected:'',onSelect:()=>{},onWhy:()=>{},onMove:()=>{},onTag:()=>{},onOperand:()=>{},onInsert:()=>{}}));
  assert.match(markup,/aria-label="PT operandını düzenle"/);assert.match(markup,/aria-label="ET çıkış tagini düzenle"/);
+});
+
+for(const [command,type] of [['NO','NO'],['NC','NC'],['R_TRIG','P'],['F_TRIG','N']] as const)test(`${command} inserts ONE unassigned contact, never an automatic START`,()=>{
+ const p=material(3).reference,e=logicInstruction(command,p.tags);assert.equal(e.type,type);assert.ok('tag' in e);assert.equal(e.tag,'');assert.equal('input' in e,false);
+ const layout=layoutLogic(e);assert.equal(layout.width,64);assert.equal(layout.children.length,0);
+ p.blocks[0].networks[0].logic=e;assert.ok(compile(p).some(d=>d.code==='E001'));
+ assert.deepEqual(parseProgram(JSON.parse(JSON.stringify(p))).blocks[0].networks[0].logic,e);
+ const html=renderToStaticMarkup(createElement(Rung,{network:p.blocks[0].networks[0],tags:p.tags,trace:{},monitor:false,locked:false,selected:'',onSelect:()=>{},onWhy:()=>{},onMove:()=>{},onTag:()=>{},onOperand:()=>{},onInsert:()=>{}}));
+ assert.ok(html.includes('???'));assert.equal(html.includes('&quot;START&quot;'),false);assert.equal((html.match(/data-expr-id=/g)||[]).length,1);
+});
+for(const type of ['P','N'] as const)test(`${type} samples its selected operand and pulses for one scan`,()=>{
+ const p=material(3).reference;p.blocks[0].networks=[{id:'edge-net',title:'Edge',logic:{id:'contact',type,tag:'START'},output:{type:'COIL',tag:'MOTOR'}}];
+ const rt=new Runtime(p);const result=[];for(const value of [false,true,true,false,false,true,false]){rt.inputs.START=value;rt.scan(10);result.push(rt.outputs.MOTOR);}
+ assert.deepEqual(result,type==='P'?[false,true,false,false,false,true,false]:[false,false,false,true,false,false,true]);
 });

@@ -9,7 +9,7 @@ export type CounterExpr=
  |{id:string;type:'CTU';instance?:string;pv:CounterValue;cvTag?:string;input:Expr;reset:Expr}
  |{id:string;type:'CTD';instance?:string;pv:CounterValue;cvTag?:string;input:Expr;load:Expr}
  |{id:string;type:'CTUD';instance?:string;pv:CounterValue;cvTag?:string;input:Expr;down:Expr;reset:Expr;load:Expr};
-export type Expr = {id:string;type:'NO'|'NC';tag:string}|{id:string;type:'AND'|'OR';children:Expr[];pin?:boolean}|TimerExpr|CounterExpr|{id:string;type:'R_TRIG'|'F_TRIG';input:Expr}|{id:string;type:'COMPARE';op:'=='|'<>'|'>'|'<'|'>='|'<=';a:Value;b:Value};
+export type Expr = {id:string;type:'NO'|'NC'|'P'|'N';tag:string}|{id:string;type:'AND'|'OR';children:Expr[];pin?:boolean}|TimerExpr|CounterExpr|{id:string;type:'R_TRIG'|'F_TRIG';input:Expr}|{id:string;type:'COMPARE';op:'=='|'<>'|'>'|'<'|'>='|'<=';a:Value;b:Value};
 export interface Output {unassigned?:boolean;type:'COIL'|'SET'|'RESET'|'MOVE';tag:string;value?:Value}
 export interface BranchConnection {block:string;pin:"reset"|"load"|"down";source:string;side:"before"|"after"}
 export interface Network {connections?:BranchConnection[];id:string;title:string;comment?:string;logic:Expr;output:Output}
