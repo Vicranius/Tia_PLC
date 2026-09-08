@@ -93,3 +93,18 @@ body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#c5c5c6;color:#25
 
 .lab{min-width:760px!important;width:100%;max-width:100%;height:100dvh}.process-workarea{container-type:inline-size}.process-workarea .process-panel{display:block}.industrial-schematic{max-height:300px}.process-trend{max-height:175px}.process-brief{padding:9px 14px;font-size:12px}.process-workbar .choice{min-width:210px}.panelhead>button{flex-shrink:0}.panelhead .block-path{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 @container (min-width:760px){.process-workarea .process-panel{display:grid;grid-template-columns:minmax(320px,1fr) 250px}.process-workarea .process-options{margin-top:0}}
+/* One dock strip; operands retain fixed grid geometry. */
+.bottom-panel .unified-tabs{height:31px;min-height:31px;flex-wrap:nowrap;padding:0 26px 0 0!important;gap:0!important;background:#b6b8bb!important;white-space:nowrap}
+.bottom-panel .unified-tabs button{height:29px;min-width:max-content!important;padding:3px 11px!important;border:1px solid #91979e;border-top:0;border-radius:0!important;color:#202b36;background:#dedfe1;flex:none;font:11px Tahoma,Arial,sans-serif}
+.bottom-panel .unified-tabs button.document-active{font-weight:bold;border-top:2px solid #e5a33c;background:#f4f4f4}
+.bottom-panel .unified-tabs button[aria-selected=true]{background:#fff!important;box-shadow:inset 0 2px #e5a33c!important}
+.inline-tag.inline-pv{width:100%;padding:0;background:white;border:0;box-shadow:none}
+.inline-tag.inline-pv input{width:100%!important;min-width:0;height:20px;padding:0 2px;font:12px Tahoma,Arial,sans-serif;border:1px solid #527c99}
+.inline-tag.inline-pv input::selection{color:#fff;background:#346897}
+.operand-hit:hover,.operand-hit:focus{fill:#c5dced55;stroke:#98b7cd;stroke-width:1;outline:none}
+.lab{color:#202020;background:#c6c6c6}.brandbar{background:#cecece}.toolbar,.document-tools{background:linear-gradient(#f0f0f0,#d0d0d0)}
+.panelhead{background:#7c8187!important;color:#fff;border-bottom:2px solid #e6a333}.panelhead span{color:inherit!important}
+.project-sidebar{background:#e1e1e1!important}.project-sidebar>[data-slot=sidebar-group-label],.right-window-title{background:#a8aaac!important;border-bottom:2px solid #e6a333!important}
+.networkhead,.block-title{background:#d2d2d2!important}.document-breadcrumb{background:#dedede}.right-panel,.instructions-browser{background:#dedede}.instruction-tree [data-slot=accordion-trigger]{background:#dedede}.instruction-tree [data-slot=accordion-content] button{background:#eee}
+.bottom-panel{background:#e2e2e2}.tag-panel thead{position:sticky;top:0;z-index:1;background:#dce0e4}.tag-panel td{white-space:nowrap}.tag-panel .true-value{color:#138000;font-weight:bold}
+.tag-panel table{table-layout:auto}.tag-panel td,.tag-panel th{padding:4px 6px!important}.tag-panel input[aria-label="Tag adı"]{width:100px;min-width:80px}.tag-panel input[aria-label="Tag adresi"]{width:76px;min-width:65px}.tag-panel td .choice{min-width:70px;width:70px}.tag-panel th{font:11px Tahoma,sans-serif}.tag-panel input[aria-label="Tag açıklaması"]{width:160px}
