@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { cookies, headers } from 'next/headers';
-import { LANG_COOKIE, parseAcceptLanguage, resolveLanguage } from '@/src/i18n/core';
+import { APP_DESCRIPTION, APP_TITLE, LANG_COOKIE, parseAcceptLanguage, resolveLanguage } from '@/src/i18n/core';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import './tia.css';
@@ -18,9 +18,8 @@ const geistMono = Geist_Mono({
 const lang = async () => resolveLanguage((await cookies()).get(LANG_COOKIE)?.value, parseAcceptLanguage((await headers()).get('accept-language')));
 
 export async function generateMetadata(): Promise<Metadata> {
-  return (await lang()) === 'tr'
-    ? { title: 'PLC Lab Web – S7-1200 Endüstriyel Eğitim', description: 'Ladder mantığı, PLC simülasyonu ve endüstriyel problemler.' }
-    : { title: 'PLC Lab Web – S7-1200 Industrial Trainer', description: 'Ladder logic, PLC simulation and industrial problems.' };
+  const current = await lang();
+  return { title: APP_TITLE[current], description: APP_DESCRIPTION[current] };
 }
 
 export default async function RootLayout({
