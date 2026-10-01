@@ -30,7 +30,7 @@ export function parseValue(text:string,type:DataType):Scalar|undefined{
  const s=text.trim().toUpperCase();if(!s)return undefined;
  if(type==='BOOL')return ['TRUE','1'].includes(s)?true:['FALSE','0'].includes(s)?false:undefined;
  let n:number|undefined;const bits=width[type]??32;
- if(/^16#[0-9A-F]+$/.test(s))n=parseInt(s.slice(3),16);else if(/^2#[01]+$/.test(s))n=parseInt(s.slice(2),2);else if(s.startsWith('T#'))n=timeLiteral(s);else if(/^[+-]?(\d+\.?\d*|\.\d+)(E[+-]?\d+)?$/.test(s))n=Number(s);
+ if(/^16#[0-9A-F]+$/.test(s))n=parseInt(s.slice(3),16);else if(/^2#[01]+$/.test(s))n=parseInt(s.slice(2),2);else if(s.startsWith('T#')){if(type!=='TIME')return undefined;n=timeLiteral(s);}else if(/^[+-]?(\d+\.?\d*|\.\d+)(E[+-]?\d+)?$/.test(s))n=Number(s);
  if(n===undefined||!Number.isFinite(n))return undefined;
  // Hex/binary input for signed types is two's complement within the type width (16#FFFF on Int → -1).
  if(/^(16|2)#/.test(s)&&(type==='INT'||type==='DINT')){if(n>=2**bits)return undefined;if(n>=2**(bits-1))n-=2**bits;}
