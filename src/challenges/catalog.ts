@@ -1,4 +1,5 @@
 import type {Tag,Program} from '../plc/model';
+import type {Lang} from '../i18n/core';
 export type PlantKind='conveyor'|'tank'|'motor'|'water'|'mixer'|'roaster';
 export interface Challenge {id:number;seed:number;title:string;level:number;scenario:string;objectives:string[];concepts:string[];tags:Tag[];delay:number;preset:number;plant:PlantKind;hints:string[]}
 const definitions:[string,number,string,string[],string[],string[],string[]][]=[
@@ -35,7 +36,11 @@ definitions.push(
  ['4–20 mA · ölçekleme ve sensör teşhisi',4,'Mühendislik birimindeki CURRENT akımını 0–100% seviyeye çevir. Modülün WIRE_BREAK teşhisini ve ölçüm aralığını kontrol et.',['4 mA → %0, 12 mA → %50, 20 mA → %100 olacak şekilde LEVEL hesapla.','CURRENT 4–20 mA aralığındaysa ve WIRE_BREAK FALSE ise VALID aktif olsun.','Aralık dışında veya WIRE_BREAK TRUE olduğunda ALARM yansın; LEVEL son geçerli değerini korusun.','Bu alıştırmada CURRENT doğrudan mA cinsindedir; fiziksel analog modül ham kodlaması kullanılmaz.'],['Analog','Diagnostics'],['WIRE_BREAK'],['VALID','ALARM']]
 );
 export const catalog=definitions.map((d,i)=>({id:i+1,title:d[0],level:d[1],concepts:d[4]}));
-export function challenge(id:number,seed=0):Challenge{
+export type CatalogEntry=(typeof catalog)[number];
+// i18n contract: concept ids stay stable English keys (stored in attempts, used for matching); only their labels are localized.
+export const catalogFor=(lang:Lang):CatalogEntry[]=>{void lang;return catalog;};
+export const conceptLabel=(concept:string,lang:Lang)=>{void lang;return concept;};
+export function challenge(id:number,seed=0,lang:Lang='en'):Challenge{void lang;
  if(!Number.isInteger(id)||id<1||id>definitions.length||!Number.isInteger(seed)||seed<0||seed>999999)throw Error('Challenge/seed geçersiz');
  const [title,level,scenario,rules,concepts,ins,outs]=definitions[id-1];const delay=(id===22?5000:id===23?8000:1000)+(seed%3)*500,preset=3+(seed%4);
  const tags:Tag[]=[...ins.map((name,i)=>({name,type:'BOOL' as const,address:`%I${Math.floor(i/8)}.${i%8}`,initial:false,inputMode:(['START','STOP','RESET'].includes(name)?'momentary':'toggle') as 'momentary'|'toggle',comment:'Dijital giriş — TRUE: aktif'})),...outs.map((name,i)=>({name,type:'BOOL' as const,address:`%Q0.${i}`,initial:false,comment:'Dijital çıkış'}))];
