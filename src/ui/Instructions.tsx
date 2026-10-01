@@ -13,7 +13,7 @@ type Item=[kind:string,version:string];
 // Basic instructions in TIA order; groups without items exist in TIA but are not implemented by the trainer.
 const basic:[K,Item[]][]=[
  ['g.general',[['NETWORK','']]],
- ['g.bit',[['NO',''],['NC',''],['COIL',''],['SET',''],['RESET',''],['R_TRIG',''],['F_TRIG','']]],
+ ['g.bit',[['NO',''],['NC',''],['COIL',''],['SET',''],['RESET',''],['NOT',''],['SR',''],['RS',''],['R_TRIG',''],['F_TRIG','']]],
  ['g.timer',[['TON','V1.0'],['TOF','V1.0'],['TP','V1.0']]],
  ['g.counter',[['CTU','V1.0'],['CTD','V1.0'],['CTUD','V1.0']]],
  ['g.compare',[['CMP ==',''],['CMP <>',''],['CMP >=',''],['CMP <=',''],['CMP >',''],['CMP <','']]],

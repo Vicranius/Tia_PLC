@@ -1,6 +1,6 @@
 import {uid,CALC_PINS,type CalcOp,type Expr,type Output,type Tag,type Value} from '../plc/model';
 
-export type LogicInstruction='NO'|'NC'|'R_TRIG'|'F_TRIG'|'TON'|'TOF'|'TP'|'CTU'|'CTD'|'CTUD'|'COMPARE';
+export type LogicInstruction='NO'|'NC'|'NOT'|'SR'|'RS'|'R_TRIG'|'F_TRIG'|'TON'|'TOF'|'TP'|'CTU'|'CTD'|'CTUD'|'COMPARE';
 export type NumericInstruction='MOVE'|CalcOp;
 
 const literal=(value:number):Value=>({kind:'literal',value});
@@ -42,6 +42,8 @@ export function logicInstruction(kind:LogicInstruction,tags:Tag[],compareOp:'=='
  const numeric=firstNumeric(tags,'RAW')?.name;
  const input:Expr={id:uid(),type:'NO',tag:''};
  if(kind==='NO'||kind==='NC')return {...input,type:kind};
+ if(kind==='NOT')return {id:uid(),type:'NOT'};
+ if(kind==='SR'||kind==='RS')return {id:uid(),type:kind,instance:'',input:empty(),reset:empty()};
  if(kind==='R_TRIG'||kind==='F_TRIG')return {id:uid(),type:kind==='R_TRIG'?'P':'N',tag:''};
  if(kind==='TON'||kind==='TOF'||kind==='TP')return {id:uid(),type:kind,instance:`${kind}_${uid().slice(0,4)}`,pt:literal(1000),input:empty()};
  if(kind==='CTU')return {id:uid(),type:kind,instance:`CTU_${uid().slice(0,4)}`,pv:literal(3),input:empty(),reset:empty()};

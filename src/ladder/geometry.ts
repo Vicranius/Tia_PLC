@@ -4,7 +4,7 @@ export const LAD_GRID_X=64;
 export const LAD_GRID_Y=48;
 export const LAD_STROKE=2;
 export const LAD_MIN_RUNG_CELLS=9;
-export type SymbolKind='NO'|'NC'|'P'|'N'|'COIL'|'SET'|'RESET';
+export type SymbolKind='NO'|'NC'|'P'|'N'|'NOT'|'COIL'|'SET'|'RESET';
 /** Fixed electrical cell. Labels are deliberately not an input. */
 export function symbolGeometry(kind:SymbolKind,x=0,y=0){
  const width=LAD_GRID_X,height=LAD_GRID_Y,cx=x+width/2,cy=y+height/2,halfBody=10;
@@ -12,8 +12,8 @@ export function symbolGeometry(kind:SymbolKind,x=0,y=0){
  const coil=['COIL','SET','RESET'].includes(kind);
  const paths=coil
   ? [`M ${cx-5} ${cy-10} Q ${cx-15} ${cy} ${cx-5} ${cy+10}`,`M ${cx+5} ${cy-10} Q ${cx+15} ${cy} ${cx+5} ${cy+10}`]
-  : [`M ${bodyLeft} ${cy-10} V ${cy+10}`,`M ${bodyRight} ${cy-10} V ${cy+10}`,...(kind==='NC'?[`M ${cx-7} ${cy+10} L ${cx+7} ${cy-10}`]:[])];
- return {width,height,cx,cy,left,right,bodyLeft,bodyRight,leftWireLength:bodyLeft-left,rightWireLength:right-bodyRight,paths,letter:kind==='SET'?'S':kind==='RESET'?'R':kind==='P'?'P':kind==='N'?'N':''};
+  : [`M ${bodyLeft} ${cy-10} V ${cy+10}`,`M ${bodyRight} ${cy-10} V ${cy+10}`,...(kind==='NOT'?[`M ${bodyLeft} ${cy-10} H ${bodyRight}`,`M ${bodyLeft} ${cy+10} H ${bodyRight}`]:[]),...(kind==='NC'?[`M ${cx-7} ${cy+10} L ${cx+7} ${cy-10}`]:[])];
+ return {width,height,cx,cy,left,right,bodyLeft,bodyRight,leftWireLength:bodyLeft-left,rightWireLength:right-bodyRight,paths,letter:kind==='NOT'?'NOT':kind==='SET'?'S':kind==='RESET'?'R':kind==='P'?'P':kind==='N'?'N':''};
 }
 export type LogicPort='IN'|'CU'|'CD'|'R'|'LD';
 export interface PlacedLogic {layout:LogicLayout;x:number;y:number;port:LogicPort}

@@ -15,7 +15,9 @@ export type CounterExpr=
  |{id:string;type:'CTU';instance?:string;pv:CounterValue;cvTag?:string;input:Expr;reset:Expr}
  |{id:string;type:'CTD';instance?:string;pv:CounterValue;cvTag?:string;input:Expr;load:Expr}
  |{id:string;type:'CTUD';instance?:string;pv:CounterValue;cvTag?:string;input:Expr;down:Expr;reset:Expr;load:Expr};
-export type Expr = {id:string;type:'NO'|'NC'|'P'|'N';tag:string}|{id:string;type:'AND'|'OR';children:Expr[];pin?:boolean}|TimerExpr|CounterExpr|{id:string;type:'R_TRIG'|'F_TRIG';input:Expr}|{id:string;type:'COMPARE';op:'=='|'<>'|'>'|'<'|'>='|'<=';a:Value;b:Value};
+// SR (reset dominant): input=S, reset=R1. RS (set dominant): input=R, reset=S1. `instance` is the bit operand that holds the state.
+export type FlipFlopExpr={id:string;type:'SR'|'RS';instance?:string;input:Expr;reset:Expr};
+export type Expr = {id:string;type:'NO'|'NC'|'P'|'N';tag:string}|{id:string;type:'AND'|'OR';children:Expr[];pin?:boolean}|TimerExpr|CounterExpr|{id:string;type:'R_TRIG'|'F_TRIG';input:Expr}|{id:string;type:'NOT'}|FlipFlopExpr|{id:string;type:'COMPARE';op:'=='|'<>'|'>'|'<'|'>='|'<=';a:Value;b:Value};
 // CALL: `tag` is the called block id (FC/FB); `instance` the instance DB id for an FB; `params` feed inputs, `outs` map outputs to operands.
 export interface Output {unassigned?:boolean;type:'COIL'|'SET'|'RESET'|'MOVE'|'CALL';tag:string;value?:Value;instance?:string;params?:Record<string,Value>;outs?:Record<string,string>}
 export interface BranchConnection {block:string;pin:"reset"|"load"|"down";source:string;side:"before"|"after"}
