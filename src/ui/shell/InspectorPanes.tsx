@@ -10,16 +10,19 @@ import {useT} from '../../i18n/react';
 import {shellDict} from '../../i18n/dict/shell';
 import {find} from '../../ladder/editing';
 import {walk} from '../../plc/model';
+import {blockName,blockNumber} from '../../plc/blocks';
+import {blocksDict} from '../../i18n/dict/blocks';
 
 export interface LogEntry {time:string;text:string;kind:'ok'|'warning'|'error'}
 const scoreKeys={logic:'tests.s.logic',safety:'tests.s.safety',structure:'tests.s.structure',conventions:'tests.s.conventions',efficiency:'tests.s.efficiency',debugging:'tests.s.debugging'} as const;
 
 // Properties › General for a block, laid out like the TIA block properties (left navigation + form).
-export function BlockProperties({block,name}:{block:Block;name:string}){
- const t=useT(shellDict),[section,setSection]=useState('general');
+export function BlockProperties({block,name,onRename,locked=false}:{block:Block;name?:string;onRename?:(name:string)=>void;locked?:boolean}){
+ const shown=name??blockName(block);
+ const t=useT(shellDict),tb=useT(blocksDict),[section,setSection]=useState('general');
  const nav=(['general','information','timeStamps','compilation','protection','attributes'] as const);
  return <div className="tia-props"><nav className="tia-props-nav">{nav.map(k=><button key={k} className={section===k?'active':''} disabled={k!=='general'} onClick={()=>setSection(k)}>{t(`props.${k}`)}</button>)}</nav><div className="tia-props-form"><h4>{t('props.general')}</h4>
-  <label><span>{t('props.name')}:</span><input readOnly value={name}/></label><label><span>{t('props.type')}:</span><input readOnly value={`OB · ${t('props.ob')}`}/></label><label><span>{t('props.language')}:</span><input readOnly value="LAD"/></label><label><span>{t('props.number')}:</span><input readOnly value={block.id.replace(/\D/g,'')}/></label><label><span>{t('props.networks')}:</span><input readOnly value={block.networks.length}/></label>
+  <label><span>{t('props.name')}:</span><input aria-label={t('props.name')} readOnly={!onRename||locked} defaultValue={shown} key={block.id+shown} onBlur={e=>{if(onRename&&e.target.value.trim()!==shown)onRename(e.target.value);}} onKeyDown={e=>{if(e.key==='Enter')(e.target as HTMLInputElement).blur();}}/></label><label><span>{t('props.type')}:</span><input readOnly value={`${block.kind} · ${tb(`kind.${block.kind}`)}`}/></label>{block.kind!=='DB'&&<label><span>{t('props.language')}:</span><input readOnly value="LAD"/></label>}<label><span>{t('props.number')}:</span><input readOnly value={blockNumber(block)}/></label>{block.kind!=='DB'&&<label><span>{t('props.networks')}:</span><input readOnly value={block.networks.length}/></label>}
  </div></div>;
 }
 export function MessageLog({log}:{log:LogEntry[]}){

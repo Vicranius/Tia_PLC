@@ -1,0 +1,36 @@
+import {defineDict} from '../core';
+
+// Add new block dialog, call options, block interface and data block editors.
+export const blocksDict=defineDict({
+ 'add.title':'Add new block','add.name':'Name:','add.language':'Language:','add.number':'Number:','add.manual':'Manual','add.automatic':'Automatic','add.type':'Type:','add.open':'Add new and open','add.ok':'OK','add.cancel':'Cancel',
+ 'kind.OB':'Organization block','kind.FB':'Function block','kind.FC':'Function','kind.DB':'Data block',
+ 'desc.OB':'Organization blocks (OBs) form the interface between the operating system and the user program. They are called by the operating system, e.g. cyclically or once at startup.',
+ 'desc.FB':'Function blocks (FBs) are code blocks that save their values permanently in instance data blocks, so the values remain available after the block has been executed.',
+ 'desc.FC':'Functions (FCs) are code blocks without memory. The values of their temporary variables are lost after the function has been executed.',
+ 'desc.DB':'Data blocks (DBs) save program data. A global DB can be used by all blocks; an instance DB belongs to one function block.',
+ 'ob.cycle':'Program cycle','ob.startup':'Startup','db.global':'Global DB','db.instance':'Instance DB of {fb}',
+ 'err.name':'Enter a valid name (letter or _ first, then letters, digits, _).','err.duplicate':'The name {name} is already used.','err.number':'Number {number} is already used by another {kind}.','err.noFb':'Create a function block first; an instance DB needs one.',
+ 'call.title':'Call options','call.single':'Single instance','call.singleDesc':'The called function block saves its data in its own instance data block.','call.dbName':'Name:','call.dbNumber':'Number:',
+ 'iface.name':'Name','iface.dataType':'Data type','iface.default':'Default value','iface.start':'Start value','iface.monitor':'Monitor value','iface.retain':'Retain','iface.comment':'Comment','iface.addNew':'<Add new>','iface.delete':'Delete',
+ 'iface.input':'Input','iface.output':'Output','iface.inout':'InOut','iface.static':'Static','iface.temp':'Temp','iface.constant':'Constant',
+ 'iface.initialCall':'Initial call of this OB','iface.remanence':'=True, if remanent data are available','iface.lostRetentive':'=True, if retentive data are lost','iface.lostRtc':'=True, if the real-time clock is lost',
+ 'db.instanceNote':'Instance DB of {fb}: its structure comes from the interface of the function block.','db.empty':'No members.',
+ 'msg.created':'{name} was added.','msg.deleted':'{name} was deleted.','msg.deleteMain':'Main [OB1] cannot be deleted.','msg.renamed':'Renamed to {name}.','msg.badName':'Invalid or duplicate name: {name}',
+ 'tree.programBlocks':'Program blocks','instr.blocks':'Program blocks','instr.noBlocks':'Add a function block or function in the project tree to call it here.',
+},{
+ 'add.title':'Yeni blok ekle','add.name':'Ad:','add.language':'Dil:','add.number':'Numara:','add.manual':'Manuel','add.automatic':'Otomatik','add.type':'Tip:','add.open':'Ekle ve aç','add.ok':'Tamam','add.cancel':'İptal',
+ 'kind.OB':'Organizasyon bloğu','kind.FB':'Fonksiyon bloğu','kind.FC':'Fonksiyon','kind.DB':'Veri bloğu',
+ 'desc.OB':'Organizasyon blokları (OB) işletim sistemi ile kullanıcı programı arasındaki arayüzdür. İşletim sistemi tarafından, örneğin çevrimsel olarak veya başlangıçta bir kez çağrılırlar.',
+ 'desc.FB':'Fonksiyon blokları (FB) değerlerini instance veri bloklarında kalıcı olarak saklayan kod bloklarıdır; değerler blok çalıştıktan sonra da kullanılabilir.',
+ 'desc.FC':'Fonksiyonlar (FC) belleği olmayan kod bloklarıdır. Geçici değişkenlerin değerleri fonksiyon çalıştıktan sonra kaybolur.',
+ 'desc.DB':'Veri blokları (DB) program verilerini saklar. Genel DB’yi bütün bloklar kullanabilir; instance DB bir fonksiyon bloğuna aittir.',
+ 'ob.cycle':'Program çevrimi','ob.startup':'Başlangıç','db.global':'Genel DB','db.instance':'{fb} instance DB’si',
+ 'err.name':'Geçerli bir ad gir (harf veya _ ile başlar, sonra harf, rakam, _).','err.duplicate':'{name} adı zaten kullanılıyor.','err.number':'{number} numarası başka bir {kind} tarafından kullanılıyor.','err.noFb':'Önce bir fonksiyon bloğu oluştur; instance DB bir FB gerektirir.',
+ 'call.title':'Çağrı seçenekleri','call.single':'Tek instance','call.singleDesc':'Çağrılan fonksiyon bloğu verilerini kendi instance veri bloğunda saklar.','call.dbName':'Ad:','call.dbNumber':'Numara:',
+ 'iface.name':'Ad','iface.dataType':'Veri tipi','iface.default':'Varsayılan değer','iface.start':'Başlangıç değeri','iface.monitor':'İzleme değeri','iface.retain':'Kalıcı','iface.comment':'Açıklama','iface.addNew':'<Yeni ekle>','iface.delete':'Sil',
+ 'iface.input':'Input','iface.output':'Output','iface.inout':'InOut','iface.static':'Static','iface.temp':'Temp','iface.constant':'Constant',
+ 'iface.initialCall':'Bu OB’nin ilk çağrısı','iface.remanence':'=True, kalıcı veri varsa','iface.lostRetentive':'=True, kalıcı veriler kaybolduysa','iface.lostRtc':'=True, gerçek zaman saati kaybolduysa',
+ 'db.instanceNote':'{fb} instance DB’si: yapısı fonksiyon bloğunun arayüzünden gelir.','db.empty':'Üye yok.',
+ 'msg.created':'{name} eklendi.','msg.deleted':'{name} silindi.','msg.deleteMain':'Main [OB1] silinemez.','msg.renamed':'Yeni ad: {name}.','msg.badName':'Geçersiz veya tekrarlanan ad: {name}',
+ 'tree.programBlocks':'Program blokları','instr.blocks':'Program blokları','instr.noBlocks':'Burada çağırmak için proje ağacında bir fonksiyon bloğu veya fonksiyon ekle.',
+});

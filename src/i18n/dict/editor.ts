@@ -35,6 +35,7 @@ export const editorDict=defineDict({
  'help.ADD':'ADD — IN1 + IN2 → OUT','help.SUB':'SUB — IN1 − IN2 → OUT','help.MUL':'MUL — IN1 × IN2 → OUT','help.DIV':'DIV — IN1 ÷ IN2 → OUT','help.MOVE':'MOVE — copy the IN value to OUT',
  'help.INT_TO_REAL':'INT_TO_REAL — convert the INT value to REAL','help.REAL_TO_INT':'REAL_TO_INT — round the REAL value to the nearest INT','help.WORD_TO_INT':'WORD_TO_INT — interpret the 16-bit WORD value as a signed INT',
  'help.NORM_X':'NORM_X — convert VALUE within the MIN–MAX range to a 0.0–1.0 ratio','help.SCALE_X':'SCALE_X — scale a 0.0–1.0 ratio to the MIN–MAX engineering range',
+ 'call.title':'Block call {name}','call.instance':'Instance DB: {name}','call.inputs':'Inputs (operand or value)','call.outputs':'Outputs','call.none':'— not connected —','call.missing':'The called block no longer exists.',
 },{
  'ribbon.contacts':'KONTAKLAR','ribbon.coils':'BOBİNLER','ribbon.timersCounters':'ZAMANLAYICILAR / SAYICILAR','ribbon.branchCompare':'BAĞLANTI / KARŞILAŞTIRMA',
  'ribbon.counter':'Sayıcı','ribbon.timer':'IEC zamanlayıcı','ribbon.addParallel':'Paralel kol ekle','ribbon.parallel':'Paralel','ribbon.addSeries':'Seri kontak ekle','ribbon.series':'Seri','ribbon.compare':'Karşılaştır',
@@ -62,4 +63,5 @@ export const editorDict=defineDict({
  'help.ADD':'ADD — IN1 + IN2 → OUT','help.SUB':'SUB — IN1 − IN2 → OUT','help.MUL':'MUL — IN1 × IN2 → OUT','help.DIV':'DIV — IN1 ÷ IN2 → OUT','help.MOVE':'MOVE — IN değerini OUT hedefine kopyala',
  'help.INT_TO_REAL':'INT_TO_REAL — INT değerini REAL değere dönüştür','help.REAL_TO_INT':'REAL_TO_INT — REAL değerini en yakın INT değere yuvarla','help.WORD_TO_INT':'WORD_TO_INT — 16 bit WORD değerini işaretli INT olarak yorumla',
  'help.NORM_X':'NORM_X — VALUE değerini MIN–MAX aralığında 0.0–1.0 oranına dönüştür','help.SCALE_X':'SCALE_X — 0.0–1.0 oranını MIN–MAX mühendislik aralığına ölçekle',
+ 'call.title':'Blok çağrısı {name}','call.instance':'Instance DB: {name}','call.inputs':'Girişler (operand veya değer)','call.outputs':'Çıkışlar','call.none':'— bağlı değil —','call.missing':'Çağrılan blok artık yok.',
 });

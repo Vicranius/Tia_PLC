@@ -46,8 +46,9 @@ export function layoutLogic(expr:Expr):LogicLayout {
  if(expr.type==='COMPARE')return {...base,width:2*X,height:3*Y};
  return base;
 }
-export function layoutRung(network:Network):RungLayout {
+// `callRows` reserves room for an FC/FB call box (one row per parameter pair).
+export function layoutRung(network:Network,callRows=0):RungLayout {
  const logic=layoutLogic(network.logic),logicX=LAD_GRID_X,logicY=0;
- const terminalY=logic.terminalY,coilX=logicX+logic.width,coilWidth=network.output.type==='MOVE'?3*LAD_GRID_X:LAD_GRID_X,rightRailX=Math.max(logicX+LAD_MIN_RUNG_CELLS*LAD_GRID_X,coilX+coilWidth);
- return {logic,logicX,logicY,terminalY,coilX,coilWidth,rightRailX,width:rightRailX+LAD_GRID_X,height:Math.max(logic.height+(network.output.type==='MOVE'?LAD_GRID_Y:0),3*LAD_GRID_Y)};
+ const terminalY=logic.terminalY,coilX=logicX+logic.width,coilWidth=network.output.type==='MOVE'?3*LAD_GRID_X:network.output.type==='CALL'?5*LAD_GRID_X:LAD_GRID_X,rightRailX=Math.max(logicX+LAD_MIN_RUNG_CELLS*LAD_GRID_X,coilX+coilWidth);
+ return {logic,logicX,logicY,terminalY,coilX,coilWidth,rightRailX,width:rightRailX+LAD_GRID_X,height:Math.max(logic.height+(network.output.type==='MOVE'?LAD_GRID_Y:0),3*LAD_GRID_Y,network.output.type==='CALL'?terminalY+24*callRows+3*LAD_GRID_Y/2:0)};
 }

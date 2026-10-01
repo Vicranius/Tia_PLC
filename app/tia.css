@@ -307,3 +307,32 @@
 .tia-monitor.true i{background:#36c25a}.tia-monitor.false i{background:#d0d0d0}
 .tia-forced-flag{display:inline-block;width:14px;height:14px;line-height:14px;text-align:center;background:#c62828;color:#fff;font-size:10px}
 .tia-f-icon{display:inline-flex;align-items:center;font-weight:700;color:#c62828;font-size:12px}
+
+/* Add new block / Call options dialogs */
+.tia-add-block{width:min(720px,100%)}
+.tia-add-block-body{display:grid;grid-template-columns:150px minmax(0,1fr);min-height:300px}
+.tia-block-tiles{display:flex;flex-direction:column;gap:2px;padding:8px;background:#e4e6e9;border-right:1px solid #c9c9c9}
+.tia-block-tiles button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border:1px solid transparent;background:transparent;border-radius:0;font:12px 'Segoe UI',Tahoma,sans-serif;color:#1e1e1e;text-align:center}
+.tia-block-tiles button:hover{background:#f2f6fa}
+.tia-block-tiles button.active{background:#fff;border-color:#7aa7d2;font-weight:600}
+.tia-block-form{padding:14px 16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.tia-block-form .tia-form-grid{grid-template-columns:90px minmax(0,1fr)}
+.tia-block-form input:not([type=radio]):not([type=checkbox]){height:21px;border:1px solid #a9b4be;padding:0 4px;font:12px 'Segoe UI',Tahoma,sans-serif;border-radius:0;min-width:0}
+.tia-number{display:flex;align-items:center;gap:10px}.tia-number input{width:80px}
+.tia-block-desc{margin:0;color:#4a4a4a;line-height:1.45;border-top:1px solid #d6d6d6;padding-top:10px}
+.tia-form-error{margin:0;color:#b42318}
+.tia-dialog-foot{border-top:1px solid #c9c9c9;padding:8px 14px}
+.tia-call-options{width:min(560px,100%)}.tia-call-options .tia-add-block-body{min-height:180px}
+
+/* Block interface / data block tables */
+.tia-iface{max-height:240px}
+.tia-iface-table tr.system td{color:#666}
+.tia-shell .tia-row-delete{border:0;background:transparent;padding:0 2px;height:18px;color:#8a8a8a}
+.tia-shell .tia-row-delete:hover:not(:disabled){color:#c0392b}
+.call-properties{display:grid;gap:4px;border:0;padding:0;margin:0}
+.call-properties label{display:grid;grid-template-columns:110px 44px minmax(0,1fr);align-items:center;gap:6px;font-size:12px}
+.call-properties input{height:21px;border:1px solid #a9b4be;padding:0 4px;font:12px 'Segoe UI',Tahoma,sans-serif;border-radius:0}
+.call-properties code{font-size:10px;color:#666}
+.instruction-inspector:has(.call-properties){flex-direction:column;align-items:stretch}
+.call-properties{width:min(560px,100%)}
+.call-properties small{display:block;margin-top:4px;color:#555}
