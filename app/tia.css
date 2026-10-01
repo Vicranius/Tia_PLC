@@ -242,8 +242,8 @@
 .tia-shell .networkhead{background:var(--tia-network-head)}
 
 /* PLC simulation window (floating, draggable) */
-.tia-plcsim{position:fixed;right:28px;bottom:48px;z-index:60;width:290px;background:#f0f0f0;border:1px solid #6f7b87;box-shadow:0 6px 18px rgba(0,0,0,.28);font:12px 'Segoe UI',Tahoma,Arial,sans-serif;color:#1e1e1e}
-.tia-plcsim-title{display:flex;align-items:center;justify-content:space-between;height:24px;padding:0 4px 0 8px;background:#3e4c59;color:#fff;font-weight:600;cursor:move;user-select:none;touch-action:none}
+.tia-plcsim{position:fixed;left:28px;bottom:40px;z-index:60;width:290px;background:#f0f0f0;border:1px solid #6f7b87;box-shadow:0 6px 18px rgba(0,0,0,.28);font:12px 'Segoe UI',Tahoma,Arial,sans-serif;color:#1e1e1e}
+.tia-plcsim-title{display:flex;align-items:center;gap:2px;height:24px;padding:0 4px 0 8px;background:#3e4c59;color:#fff;font-weight:600;cursor:move;user-select:none;touch-action:none}
 .tia-plcsim-title button{border:0;background:transparent;color:#fff;padding:2px;border-radius:0;display:inline-flex}
 .tia-plcsim-title button:hover{background:#c0392b}
 .tia-plcsim-body{padding:8px;display:grid;gap:7px}

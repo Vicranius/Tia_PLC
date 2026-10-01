@@ -47,7 +47,7 @@ export default function Lab(){
  const values=snapshot?.values??Object.fromEntries(program.tags.map(x=>[x.name,x.initial]));
  // Online/offline comparison per block, as in TIA: monitoring needs the block on the CPU to equal the one in the editor.
  const sameBlock=(id:string)=>!!lab.downloaded&&JSON.stringify(lab.downloaded.blocks.find(b=>b.id===id))===JSON.stringify(program.blocks.find(b=>b.id===id));
- const differs=new Set(lab.downloaded?program.blocks.filter(b=>!sameBlock(b.id)).map(b=>b.id):[]),consistent=!!lab.downloaded&&!differs.size&&JSON.stringify(lab.downloaded.tags)===JSON.stringify(program.tags);
+ const differs=new Set(lab.downloaded||simOn?program.blocks.filter(b=>!sameBlock(b.id)).map(b=>b.id):[]),consistent=!!lab.downloaded&&!differs.size&&JSON.stringify(lab.downloaded.tags)===JSON.stringify(program.tags);
  const monitoring=online&&monitor,io=program.tags.filter(x=>/^%[IQ]/.test(x.address));
  const watch=watchRows??io.map(x=>({name:x.name,format:defaultFormat(x.type),modify:'',modifyOn:false})),force=forceRows??io.filter(x=>x.address.startsWith('%I')).map(x=>({name:x.name,format:defaultFormat(x.type),force:x.type==='BOOL'?'TRUE':'0',forceOn:false}));
  useEffect(()=>{setWatchRows(null);setForceRows(null);},[c.id]);
@@ -76,7 +76,7 @@ export default function Lab(){
  const step=()=>{if(!simOn){lab.setMessage(t('msg.noSimulation'));return;}if(!lab.run('step')){lab.setMessage(t('msg.needDownload'));return;}inspect('info','scan');};
  const mres=()=>{if(lab.downloaded){lab.send({action:'load',program:lab.downloaded,plant:c.plant});lab.setMessage(t('testing.mresDone'));}};
  const modify=(entries:[string,import('../plc/model').Scalar][])=>{for(const [tag,value] of entries){if(program.tags.find(x=>x.name===tag)?.address.startsWith('%I'))lab.input(tag,value);else lab.send({action:'write',tag,value});}};
- const needOnline=(fn:()=>void)=>()=>{if(!online){lab.setMessage(tt('msg.needOnline'));return;}fn();};
+ const needOnline=(fn:()=>void)=>()=>{if(!online){lab.setMessage(tt('msg.needOnline'));return false;}fn();return true;};
  const panel=(fn:()=>void)=>()=>{if(!online){lab.setMessage(t('testing.needOnline'));return;}fn();};
  const goOnline=()=>{if(!simOn){lab.setMessage(t('msg.noSimulation'));return;}setOnline(true);lab.setMonitor(true);lab.setMessage(t('msg.online'));};
  const goOffline=()=>{setOnline(false);lab.setMessage(t('msg.offline'));};
@@ -122,7 +122,7 @@ export default function Lab(){
  }};
  const cardContent:Record<CardId,ReactNode>={
   instructions:<Instructions insert={insertInstruction} disabled={locked} onProblem={()=>showCard('tasks')}/>,
-  testing:<TestingCard mode={mode} scans={snapshot?.scans??0} time={snapshot?.time??0} forces={Object.keys(snapshot?.forces??{}).length} errors={errors} busy={busy} speed={lab.speed} onRun={panel(startCpu)} onStop={panel(stopCpu)} onMres={panel(mres)} onPause={()=>lab.send({action:'pause'})} onStep={step} onSpeed={speed=>{lab.setSpeed(speed);lab.send({action:'speed',speed:Number(speed)});}} process={<Process plant={plant} c={{...c,tags:program.tags}} values={values} inputs={snapshot?.inputs??{}} onInput={lab.input} send={lab.send}/>}/>,
+  testing:<TestingCard mode={mode} scans={snapshot?.scans??0} time={snapshot?.time??0} forces={Object.keys(snapshot?.forces??{}).length} errors={0} busy={busy} speed={lab.speed} onRun={panel(startCpu)} onStop={panel(stopCpu)} onMres={panel(mres)} onPause={()=>lab.send({action:'pause'})} onStep={step} onSpeed={speed=>{lab.setSpeed(speed);lab.send({action:'speed',speed:Number(speed)});}} process={<Process plant={plant} c={{...c,tags:program.tags}} values={values} inputs={snapshot?.inputs??{}} onInput={lab.input} send={lab.send}/>}/>,
   tasks:<TasksCard c={c} locked={locked} busy={busy} onChoose={id=>switchChallenge(id)} onVariant={()=>switchChallenge(c.id,Math.floor(Math.random()*999999))} onDebug={()=>switchChallenge(3,0,true)} onCheck={()=>{inspect('info','tests');void lab.check();}} onLearning={()=>open('learning')} onInstructor={()=>inspect('info','instructor')} exercise={<ExercisePanel key={c.id} challenge={c} locked={locked} reset={lab.resetExercise} run={()=>simOn?startCpu():startSimulation()} test={()=>{inspect('info','tests');void lab.check();}} exercises={()=>open('learning')}/>}/>,
   libraries:<LibrariesCard/>,
   addins:<NotAvailable text={t('card.notAvailable')}/>,
@@ -154,7 +154,7 @@ export default function Lab(){
   </div>
   <EditorBar editors={editors.map(id=>({id,label:editorMeta(id).label,icon:editorMeta(id).icon}))} active={active} status={status} onActivate={id=>setActive(id as EditorId)} onPortal={()=>setPortalView(true)} onOverview={()=>open('overview')}/>
  </main>
- {simOn&&<Plcsim cpu={program.cpu} mode={mode} loaded={!!lab.downloaded} consistent={consistent} errors={errors} forces={Object.keys(snapshot?.forces??{}).length} onRun={startCpu} onStop={stopCpu} onMres={mres} onClose={closeSimulation}/>}
+ {simOn&&<Plcsim cpu={program.cpu} mode={mode} loaded={!!lab.downloaded} consistent={consistent} errors={0} forces={Object.keys(snapshot?.forces??{}).length} onRun={startCpu} onStop={stopCpu} onMres={mres} onClose={closeSimulation}/>}
  {dlOpen&&<DownloadDialog first={!connected} simulation={simOn} cpu={program.cpu} running={running} errors={errors} onLoad={()=>{if(running)stopCpu();const ok=lab.download(false);if(ok){setConnected(true);lab.setMessage(t('msg.downloadOk'));}return ok;}} onFinish={start=>{setDlOpen(false);if(start)lab.run();}} onCancel={()=>setDlOpen(false)}/>}
  </>;
 }
