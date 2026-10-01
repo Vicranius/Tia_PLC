@@ -9,6 +9,7 @@ import {IndustrialPlant} from '../src/simulation/industrial';
 import {Plant} from '../src/simulation/conveyor';
 import {plcDict} from '../src/i18n/dict/plc';
 import type {Diagnostic,Expr,Network,Program,Tag} from '../src/plc/model';
+import {startWorker} from './worker-harness';
 
 const turkishLetters=/[çğıöşüÇĞİÖŞÜ]/;
 const tag=(name:string,type:Tag['type'],address:string,initial:Tag['initial']=false):Tag=>({name,type,address,initial,comment:''});
@@ -242,15 +243,7 @@ test('Plant (conveyor wrapper) forwards the language',()=>{
  assert.equal(new Plant().lang,'en');
 });
 
-// The Web Worker owns the Runtime and the plant; drive it with its real message protocol.
-type WorkerReply={snapshot?:ReturnType<Runtime['snapshot']>;plant:ReturnType<Plant['snapshot']>;mode:string;error?:string};
-async function startWorker(){
- const posted:WorkerReply[]=[],timers:(()=>void)[]=[],g=globalThis as unknown as Record<string,unknown>,realInterval=g.setInterval;
- g.postMessage=(message:WorkerReply)=>{posted.push(message);};g.onmessage=null;g.setInterval=(fn:()=>void)=>{timers.push(fn);return 0;};
- try{await import('../src/simulation/worker');}finally{g.setInterval=realInterval;}
- const send=(data:Record<string,unknown>)=>(g.onmessage as (event:{data:unknown})=>void)({data});
- return {posted,send,tick:()=>timers.forEach(fn=>fn()),last:()=>posted[posted.length-1]};
-}
+// The Web Worker owns the Runtime and the plant; drive it with its real message protocol (shared harness: the worker is a singleton).
 test('Worker: lang in load, {action:"lang"} switches subsequent snapshots without resetting',async()=>{
  const w=await startWorker();
  w.send({action:'load',program:traced(),plant:'water',lang:'tr'});
