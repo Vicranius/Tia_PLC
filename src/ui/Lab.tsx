@@ -29,7 +29,7 @@ import {blankNetwork} from '../plc/model';
 const PROJECT='PLC_Lab_Project';
 const blockName=(id:string)=>id==='OB1'?'Main':id==='OB100'?'Startup':id;
 // Status kind for the TIA message list; "errors: 0" / "hata: 0" in a compile summary is not an error.
-const isError=(text:string)=>/failed|could not|cannot|canceled|invalid|başarısız|başlatılamadı|okunamadı|iptal|geçersiz/i.test(text)||/\b[1-9]\d* (compile )?(error|derleme hatası)/i.test(text);
+const isError=(text:string)=>/failed|could not|cannot|canceled|invalid|başarısız|başlatılamadı|okunamadı|iptal|geçersiz/i.test(text)||/\b[1-9]\d* (compile )?(error|derleme hatası)|\((errors|hata): [1-9]/i.test(text);
 
 export default function Lab(){
  const lab=useLab(),{lang,setLang}=useLang(),t=useT(shellDict);const {c,program,snapshot,plant,mode,cycle,monitor,busy,result,hints,solution}=lab;
@@ -58,7 +58,7 @@ export default function Lab(){
  const showWhy=(id:string)=>{setWhy(id);inspect('info','scan');};
  const switchChallenge=(id:number,seed=0,debug=false)=>{open('ladder:OB1');setWhy('');void lab.loadChallenge(id,seed,debug);};
  const openProject=(target?:ProjectTarget)=>{if(target){const id=(target.view==='ladder'?`ladder:${target.block??'OB1'}`:target.view) as EditorId;open(id);if(target.monitor){setOnline(true);lab.setMonitor(true);}}setPortalView(false);};
- const compileNow=()=>{inspect('info','compile');lab.setMessage(diagnostics.length?t('msg.compileErrors',{n:diagnostics.length}):t('msg.compileOk'));};
+ const compileNow=()=>{inspect('info','compile');lab.setMessage(t('info.compileSummary',{e:errors,w:diagnostics.length-errors}));};
  const download=()=>{if(errors){inspect('info','compile');lab.setMessage(t('msg.downloadBlocked'));return;}lab.send({action:'load',program,plant:c.plant});lab.setMessage(t('msg.downloadOk'));};
  const goOnline=()=>{setOnline(true);lab.setMonitor(true);lab.setMessage(t('msg.online'));};
  const goOffline=()=>{setOnline(false);lab.setMessage(t('msg.offline'));};

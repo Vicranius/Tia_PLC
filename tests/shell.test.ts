@@ -184,3 +184,14 @@ test('Inspector panes: block properties, message log, compile list, test results
   clean(lang,ok,'TestResults');
  }
 });
+
+// ---- regressions found by browser testing ----
+test('Inspector: panes of different tabs may share a sub-tab id without duplicate React keys',()=>{
+ const seen:string[]=[],original=console.error;console.error=(...a:unknown[])=>{seen.push(a.map(String).join(' '));};
+ try{for(const lang of LANGS)for(const tab of ['properties','info','diagnostics'] as const)inspector(lang,tab);}finally{console.error=original;}
+ assert.deepEqual(seen.filter(x=>/same key|unique/i.test(x)),[]);
+});
+test('Stylesheet does not hide the Tasks card exercise panel',async()=>{
+ const {readFileSync}=await import('node:fs');
+ for(const f of ['app/globals.css','app/tia.css'])assert.doesNotMatch(readFileSync(f,'utf8'),/\.exercise-panel\{display:none/);
+});
