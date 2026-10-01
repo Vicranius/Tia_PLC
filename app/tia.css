@@ -283,3 +283,27 @@
 /* Online ≠ offline */
 .tia-differs{padding:4px 10px;background:#fff4e0;border-bottom:1px solid #e8b46a;color:#7a4b00;font-size:12px}
 .tia-tree-status.differs{color:#e8862a}
+
+/* Tag, watch and force tables */
+.tia-table-editor{display:flex;flex-direction:column;min-height:0;height:100%;background:#fff}
+.tia-table-toolbar{display:flex;align-items:center;gap:1px;height:28px;padding:0 5px;background:linear-gradient(#fbfbfb,#efefef);border-bottom:1px solid var(--tia-line);flex:none}
+.tia-table-toolbar>i{width:1px;height:18px;background:#c5c5c5;margin:0 4px}
+.tia-shell .tia-table-toolbar button{border:1px solid transparent;background:transparent;width:26px;height:23px;padding:0;justify-content:center}
+.tia-shell .tia-table-toolbar button:hover:not(:disabled){background:#e5f1fb;border-color:#9cc3e5}
+.tia-shell .tia-table-toolbar button.pressed{background:#fde7d0;border-color:#e8862a}
+.tia-table-scroll{flex:1;min-height:0;overflow:auto}
+.tia-edit-grid td{padding:0 4px}
+.tia-edit-grid td.center{text-align:center}
+.tia-edit-grid td.muted{color:#777}
+.tia-edit-grid input:not([type=checkbox]),.tia-edit-grid select{width:100%;min-width:60px;height:19px;border:1px solid transparent;background:transparent;font:12px 'Segoe UI',Tahoma,sans-serif;padding:0 3px;border-radius:0;color:inherit}
+.tia-edit-grid input:not([type=checkbox]):hover,.tia-edit-grid select:hover{border-color:#c9c9c9;background:#fff}
+.tia-edit-grid input:not([type=checkbox]):focus,.tia-edit-grid select:focus{border-color:#7aa7d2;background:#fff;outline:0}
+.tia-edit-grid tr.selected td{background:var(--tia-select)}
+.tia-edit-grid tr.add input{color:#777;font-style:italic}
+.tia-edit-grid th{max-width:150px;overflow:hidden;text-overflow:ellipsis}
+.tia-edit-grid tr.forced td{background:#fff3f3}
+.tia-monitor{display:inline-flex;align-items:center;gap:5px;font-family:Consolas,'Segoe UI',monospace}
+.tia-monitor i{display:inline-block;width:10px;height:10px;border:1px solid #4d4d4d}
+.tia-monitor.true i{background:#36c25a}.tia-monitor.false i{background:#d0d0d0}
+.tia-forced-flag{display:inline-block;width:14px;height:14px;line-height:14px;text-align:center;background:#c62828;color:#fff;font-size:10px}
+.tia-f-icon{display:inline-flex;align-items:center;font-weight:700;color:#c62828;font-size:12px}

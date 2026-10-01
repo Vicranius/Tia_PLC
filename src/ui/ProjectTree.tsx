@@ -5,7 +5,7 @@ import {useT} from '../i18n/react';
 import {shellDict,type ShellKey} from '../i18n/dict/shell';
 import {AddIcon,BlockIcon,CpuIcon,DbIcon,DeviceConfigIcon,DevicesNetworksIcon,ExerciseIcon,FolderIcon,HmiIcon,InfoIcon,OnlineDiagIcon,ProjectIcon,ScreenIcon,TagTableIcon,WatchTableIcon} from './shell/TiaIcons';
 
-export type EditorId='ladder:OB1'|'ladder:OB100'|'tags'|'watch'|'process'|'device'|'diagnostics'|'learning'|'overview';
+export type EditorId='ladder:OB1'|'ladder:OB100'|'tags'|'watch'|'force'|'process'|'device'|'diagnostics'|'learning'|'overview';
 interface TreeNode {id:string;label:ShellKey|{text:string};icon:ReactNode;open?:EditorId;children?:TreeNode[];folder?:boolean;status?:boolean}
 interface Props {projectName:string;cpuName:string;blocks:Block[];tags:Tag[];active:EditorId;online:boolean;differs?:Set<string>;onOpen:(id:EditorId)=>void;onCollapse:()=>void}
 
@@ -26,7 +26,7 @@ export default function ProjectTree({projectName,cpuName,blocks,tags,active,onli
    folder('technology','tree.technology'),folder('external','tree.external'),
    folder('tags','tree.plcTags',[{id:'all-tags',label:'tree.showAllTags',icon:<TagTableIcon/>,open:'tags'},{id:'add-tag-table',label:'tree.addTagTable',icon:<AddIcon/>},{id:'default-tags',label:{text:`${t('tree.defaultTagTable')} [${tags.length}]`},icon:<TagTableIcon/>,open:'tags'}]),
    folder('types','tree.dataTypes'),
-   folder('watch','tree.watchTables',[{id:'add-watch',label:'tree.addWatchTable',icon:<AddIcon/>},{id:'watch-1',label:{text:t('tree.watchTable1')},icon:<WatchTableIcon/>,open:'watch'}]),
+   folder('watch','tree.watchTables',[{id:'add-watch',label:'tree.addWatchTable',icon:<AddIcon/>},{id:'force-table',label:'tree.forceTable',icon:<WatchTableIcon/>,open:'force'},{id:'watch-1',label:{text:t('tree.watchTable1')},icon:<WatchTableIcon/>,open:'watch'}]),
    folder('backups','tree.backups'),folder('traces','tree.traces'),folder('opcua','tree.opcua'),folder('proxy','tree.proxy'),
    {id:'program-info',label:'tree.programInfo',icon:<InfoIcon/>,open:'overview'},
    {id:'alarm-texts',label:'tree.alarmTexts',icon:<DbIcon/>},
