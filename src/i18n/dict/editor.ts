@@ -63,5 +63,5 @@ export const editorDict=defineDict({
  'help.ADD':'ADD — IN1 + IN2 → OUT','help.SUB':'SUB — IN1 − IN2 → OUT','help.MUL':'MUL — IN1 × IN2 → OUT','help.DIV':'DIV — IN1 ÷ IN2 → OUT','help.MOVE':'MOVE — IN değerini OUT hedefine kopyala',
  'help.INT_TO_REAL':'INT_TO_REAL — INT değerini REAL değere dönüştür','help.REAL_TO_INT':'REAL_TO_INT — REAL değerini en yakın INT değere yuvarla','help.WORD_TO_INT':'WORD_TO_INT — 16 bit WORD değerini işaretli INT olarak yorumla',
  'help.NORM_X':'NORM_X — VALUE değerini MIN–MAX aralığında 0.0–1.0 oranına dönüştür','help.SCALE_X':'SCALE_X — 0.0–1.0 oranını MIN–MAX mühendislik aralığına ölçekle',
- 'call.title':'Blok çağrısı {name}','call.instance':'Instance DB: {name}','call.inputs':'Girişler (operand veya değer)','call.outputs':'Çıkışlar','call.none':'— bağlı değil —','call.missing':'Çağrılan blok artık yok.',
+ 'call.title':'Blok çağrısı {name}','call.instance':'Instance veri bloğu: {name}','call.inputs':'Girişler (operand veya değer)','call.outputs':'Çıkışlar','call.none':'— bağlı değil —','call.missing':'Çağrılan blok artık yok.',
 });

@@ -1,7 +1,7 @@
-import {uid,type Expr,type Output,type Tag,type Value} from '../plc/model';
+import {uid,CALC_PINS,type CalcOp,type Expr,type Output,type Tag,type Value} from '../plc/model';
 
 export type LogicInstruction='NO'|'NC'|'R_TRIG'|'F_TRIG'|'TON'|'TOF'|'TP'|'CTU'|'CTD'|'CTUD'|'COMPARE';
-export type NumericInstruction='MOVE'|'ADD'|'SUB'|'MUL'|'DIV'|'INT_TO_REAL'|'REAL_TO_INT'|'WORD_TO_INT'|'NORM_X'|'SCALE_X';
+export type NumericInstruction='MOVE'|CalcOp;
 
 const literal=(value:number):Value=>({kind:'literal',value});
 const tagValue=(name:string|undefined):Value=>name?{kind:'tag',tag:name}:literal(0);
@@ -18,6 +18,10 @@ export function defaultOperationValue(kind:NumericInstruction,tags:Tag[]):Value{
   case'WORD_TO_INT':return {kind:'calc',op:kind,a:raw,b:literal(0)};
   case'NORM_X':return {kind:'calc',op:kind,a:literal(0),b:raw,c:literal(27648)};
   case'SCALE_X':return {kind:'calc',op:kind,a:literal(0),b:{kind:'calc',op:'NORM_X',a:literal(0),b:raw,c:literal(27648)},c:literal(150)};
+  case'LIMIT':return {kind:'calc',op:kind,a:literal(0),b:raw,c:literal(100)};
+  case'SEL':return {kind:'calc',op:kind,a:tagValue(tags.find(t=>t.type==='BOOL')?.name),b:raw,c:literal(0)};
+  case'AND':case'OR':case'XOR':return {kind:'calc',op:kind,a:raw,b:literal(255)};
+  default:return {kind:'calc',op:kind,a:raw,b:literal(CALC_PINS[kind].length>1?1:0)};
  }
 }
 

@@ -1,7 +1,13 @@
 export type DataType = 'BOOL'|'BYTE'|'WORD'|'DWORD'|'INT'|'DINT'|'REAL'|'TIME';
 export type Scalar = boolean|number;
 export interface Tag {inputMode?:'toggle'|'momentary';name:string;type:DataType;address:string;initial:Scalar;comment:string}
-export type Value = {kind:'literal';value:number}|{kind:'tag';tag:string}|{kind:'calc';op:'ADD'|'SUB'|'MUL'|'DIV'|'INT_TO_REAL'|'REAL_TO_INT'|'WORD_TO_INT'|'NORM_X'|'SCALE_X';a:Value;b:Value;c?:Value};
+// Box instructions that compute a value (math, conversion, word logic, shift/rotate); pins name the operands a, b, c in order.
+export const CALC_PINS={ADD:['IN1','IN2'],SUB:['IN1','IN2'],MUL:['IN1','IN2'],DIV:['IN1','IN2'],MOD:['IN1','IN2'],NEG:['IN'],ABS:['IN'],MIN:['IN1','IN2'],MAX:['IN1','IN2'],LIMIT:['MN','IN','MX'],SQR:['IN'],SQRT:['IN'],
+ INT_TO_REAL:['IN'],REAL_TO_INT:['IN'],WORD_TO_INT:['IN'],NORM_X:['MIN','VALUE','MAX'],SCALE_X:['MIN','VALUE','MAX'],
+ AND:['IN1','IN2'],OR:['IN1','IN2'],XOR:['IN1','IN2'],INVERT:['IN'],DECO:['IN'],ENCO:['IN'],SEL:['G','IN0','IN1'],SHL:['IN','N'],SHR:['IN','N'],ROL:['IN','N'],ROR:['IN','N']} as const satisfies Record<string,readonly string[]>;
+export type CalcOp=keyof typeof CALC_PINS;
+export const CALC_OPS=Object.keys(CALC_PINS) as CalcOp[];
+export type Value = {kind:'literal';value:number}|{kind:'tag';tag:string}|{kind:'calc';op:CalcOp;a:Value;b:Value;c?:Value};
 export type CounterValue=number|Value;
 export type TimerValue=number|Value;
 export type TimerExpr={id:string;type:'TON'|'TOF'|'TP';instance?:string;pt:TimerValue;etTag?:string;input:Expr};

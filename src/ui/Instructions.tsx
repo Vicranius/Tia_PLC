@@ -17,10 +17,12 @@ const basic:[K,Item[]][]=[
  ['g.timer',[['TON','V1.0'],['TOF','V1.0'],['TP','V1.0']]],
  ['g.counter',[['CTU','V1.0'],['CTD','V1.0'],['CTUD','V1.0']]],
  ['g.compare',[['CMP ==',''],['CMP <>',''],['CMP >=',''],['CMP <=',''],['CMP >',''],['CMP <','']]],
- ['g.math',[['ADD','V1.0'],['SUB','V1.0'],['MUL','V1.0'],['DIV','V1.0']]],
+ ['g.math',[['ADD','V1.0'],['SUB','V1.0'],['MUL','V1.0'],['DIV','V1.0'],['MOD','V1.0'],['NEG',''],['ABS',''],['MIN',''],['MAX',''],['LIMIT',''],['SQR',''],['SQRT','']]],
  ['g.move',[['MOVE','']]],
  ['g.convert',[['INT_TO_REAL',''],['REAL_TO_INT',''],['WORD_TO_INT',''],['NORM_X',''],['SCALE_X','']]],
- ['g.program',[]],['g.word',[]],['g.shift',[]],
+ ['g.program',[]],
+ ['g.word',[['AND',''],['OR',''],['XOR',''],['INVERT',''],['DECO',''],['ENCO',''],['SEL','']]],
+ ['g.shift',[['SHR',''],['SHL',''],['ROR',''],['ROL','']]],
 ];
 const favorites=['NO','NC','COIL','SET','RESET'];
 const extended:K[]=['x.datetime','x.string','x.image','x.dio','x.energy','x.module','x.interrupts','x.alarming','x.diagnostics','x.pulse','x.recipe','x.dbcontrol','x.addressing'];

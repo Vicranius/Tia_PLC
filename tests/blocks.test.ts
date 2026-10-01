@@ -132,7 +132,7 @@ test('out-of-range writes to #local and DB members throw rt.range',()=>{
  const b=prog([ob1(callNet('c','FB1',{instance:'DB1'})),fb('FB1','B',{static:[v('S','INT')]},move('m','#S',lit(-40000))),inst('DB1','B_DB','FB1')]);
  assert.throws(()=>new Runtime(b).scan(10),/outside the INT range/);
 });
-test('#local in an OB with a Temp variable works at runtime',{todo:'OB runs without a call frame: #Temp throws rt.local'},()=>{
+test('#local in an OB with a Temp variable works at runtime',()=>{
  const p=prog([{...ob1(move('m1','#Tmp',lit(5)),move('m2','RES',tg('#Tmp'))),iface:{temp:[v('Tmp','INT')]}}]);
  assert.deepEqual(codes(p),[]);const rt=new Runtime(p);scans(rt,1);assert.equal(rt.snapshot().values.RES,5);
 });
@@ -209,7 +209,7 @@ test('E057: constants cannot be written (coil, set, reset, MOVE, call output)',(
  assert.ok(!errors(f(move('m','#R',lit(1)))).includes('E057'));
  assert.ok(!errors(f(net('n',no('c','#K'),{type:'COIL',tag:'LAMP'}))).includes('E057'),'reading is fine');
 });
-test('E057: an InOut actual bound to a constant is rejected',{todo:'compiler only checks outputs, not InOut actuals, for write protection'},()=>{
+test('E057: an InOut actual bound to a constant is rejected',()=>{
  const p=prog([{...ob1(callNet('c','FC1',{params:{X:tg('#K')}})),iface:{constant:[v('K','INT',5)]}},fc('FC1','F',{inout:[v('X','INT')]},move('m','#X',lit(1)))]);
  assert.ok(errors(p).includes('E057'));
 });
@@ -235,7 +235,7 @@ test('empty root path is only allowed for CALL and MOVE',()=>{
  assert.ok(!errors(callee([fc('FC1','F',{})])).includes('E014'));
  assert.ok(errors(prog([ob1(net('n',and('a',and('inner')),{type:'MOVE',tag:'RES',value:lit(1)}))])).includes('E014'),'nested empty branch still an error');
 });
-test('a BOOL tag for an INT input is rejected',{todo:'compiler only checks BOOL-ness for BOOL inputs; BOOL tag into INT param compiles and runs as 1'},()=>{
+test('a BOOL tag for an INT input is rejected',()=>{
  assert.ok(errors(callee([fc('FC1','F',{input:[v('N','INT')]})],{params:{N:tg('START')}})).includes('E006'));
 });
 test('data type and name checks on parameters and DB members',()=>{
