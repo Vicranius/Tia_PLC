@@ -1,3 +1,4 @@
+import './instructions.test';
 import './blocks.test';
 import './plcsim.test';
 import './tables.test';
