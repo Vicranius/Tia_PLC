@@ -1,3 +1,5 @@
+import './plcsim.test';
+import './tables.test';
 import './shell.test';
 import './industrial.test';
 import './connections.test';
