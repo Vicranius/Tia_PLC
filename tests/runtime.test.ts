@@ -1,3 +1,4 @@
+import './shell.test';
 import './industrial.test';
 import './connections.test';
 import './status.test';

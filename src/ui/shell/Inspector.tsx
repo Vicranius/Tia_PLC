@@ -14,6 +14,6 @@ export default function Inspector({title,tab,sub,open,badge,subs,onTab,onSub,onT
  return <section className={`tia-inspector${open?'':' collapsed'}`} aria-label={t('inspector.label')}>
   <div className="tia-pane-title tia-inspector-head"><span className="tia-inspector-title">{title}</span><div className="tia-inspector-tabs" role="tablist">{tabs.map(x=><button key={x.id} role="tab" aria-selected={open&&tab===x.id} className={open&&tab===x.id?'active':''} onClick={()=>onTab(x.id)}><x.icon size={14}/>{t(x.key)}{x.id==='info'&&!!badge&&<i className="tia-badge">{badge}</i>}</button>)}</div><button className="tia-pane-btn" aria-label={open?t('pane.collapse'):t('pane.expand')} title={open?t('pane.collapse'):t('pane.expand')} onClick={onToggle}>{open?'▾':'▴'}</button></div>
   {open&&<><div className="tia-subtabs" role="tablist">{list.map(s=><button key={s.id} role="tab" aria-selected={current.id===s.id} className={current.id===s.id?'active':''} onClick={()=>onSub(s.id)}>{s.label}</button>)}</div>
-  <div className="tia-inspector-body">{(Object.values(subs).flat()).filter(s=>s.keepMounted||s===current).map(s=><div key={s.id} className="tia-inspector-pane" hidden={s!==current}>{s.content}</div>)}</div></>}
+  <div className="tia-inspector-body">{Object.entries(subs).flatMap(([group,list])=>list.map(s=>({group,s}))).filter(({s})=>s.keepMounted||s===current).map(({group,s})=><div key={`${group}-${s.id}`} className="tia-inspector-pane" hidden={s!==current}>{s.content}</div>)}</div></>}
  </section>;
 }

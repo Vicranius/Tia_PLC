@@ -167,7 +167,7 @@
 .tia-card-options{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 6px;border-bottom:1px solid var(--tia-line)}
 .tia-instr-search{display:flex;align-items:center;gap:4px;flex:1;max-width:220px;border:1px solid #a9b4be;background:#fff;padding:0 4px;height:20px}
 .tia-instr-search input{border:0;outline:0;flex:1;min-width:0;font:12px 'Segoe UI',Tahoma,sans-serif;padding:0;background:transparent}
-.tia-instr-head,.tia-shell .tia-instr-row{display:grid;grid-template-columns:minmax(120px,1.2fr) minmax(90px,1.4fr) 52px;align-items:center}
+.tia-instr-head,.tia-shell .tia-instr-row{display:grid;grid-template-columns:minmax(96px,1.2fr) minmax(56px,1.4fr) 38px;align-items:center}
 .tia-instr-head{height:19px;padding:0 6px;font-size:11px;color:#444;background:linear-gradient(#fbfbfb,#ececec);border-bottom:1px solid var(--tia-line)}
 .tia-shell .tia-instr-row{width:100%;height:var(--tia-row-h);border:0;border-bottom:1px solid transparent;background:transparent;padding-right:6px;text-align:left;justify-content:stretch;font-size:12px}
 .tia-shell .tia-instr-row:hover:not(:disabled){background:var(--tia-hover)}

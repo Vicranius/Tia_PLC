@@ -28,7 +28,8 @@ import {blankNetwork} from '../plc/model';
 
 const PROJECT='PLC_Lab_Project';
 const blockName=(id:string)=>id==='OB1'?'Main':id==='OB100'?'Startup':id;
-const isError=(text:string)=>/error|failed|could not|cannot|canceled|invalid|hata|başarısız|başlatılamadı|okunamadı|iptal|geçersiz/i.test(text);
+// Status kind for the TIA message list; "errors: 0" / "hata: 0" in a compile summary is not an error.
+const isError=(text:string)=>/failed|could not|cannot|canceled|invalid|başarısız|başlatılamadı|okunamadı|iptal|geçersiz/i.test(text)||/\b[1-9]\d* (compile )?(error|derleme hatası)/i.test(text);
 
 export default function Lab(){
  const lab=useLab(),{lang,setLang}=useLang(),t=useT(shellDict);const {c,program,snapshot,plant,mode,cycle,monitor,busy,result,hints,solution}=lab;
