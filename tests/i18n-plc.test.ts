@@ -39,7 +39,7 @@ const faulty=():Program=>({version:1,cpu:'CPU 1214C',tags:[
  {id:'FC1',kind:'FC',networks:[net('fc',and('fa'),{type:'COIL',tag:'Q1'})]}
 ]});
 const noOb1=():Program=>({version:1,cpu:'CPU 1214C',tags:[],blocks:[]});
-const EXPECTED_CODES=['E001','E002','E003','E004','E005','E006','E009','E010','E011','E012','E013','E014','E015','E030','E031','E034','E035','E036','E037','E038','E041','W021','W040','W060'];
+const EXPECTED_CODES=['E001','E002','E003','E004','E005','E006','E009','E010','E011','E012','E013','E014','E015','E030','E031','E034','E035','E036','E037','E038','E041','W021','W040','W061'];
 
 test('compile(): messages follow the language, codes and order stay identical',()=>{
  const seen=new Set<string>();
@@ -69,8 +69,8 @@ test('compile(): known messages in both languages',()=>{
  assert.ok(find(compile(p,'tr'),'E041').includes('Bağlantının kaynak branch’i silinmiş.'));
  assert.ok(find(compile(p),'E038').includes('Q1: a TIME tag is required for ET'));
  assert.ok(find(compile(p,'tr'),'E038').includes('Q1: ET için TIME tag gerekli'));
- assert.ok(find(compile(p),'W060').includes('FC1: not called automatically (only OB1 and OB100 run)'));
- assert.ok(find(compile(p,'tr'),'W060').includes('FC1: MVP içinde otomatik çağrılmaz'));
+ assert.ok(find(compile(p),'W061').includes('FC1 [FC1] is not called from any OB'));
+ assert.ok(find(compile(p,'tr'),'W061').includes('FC1 [FC1] hiçbir OB’den çağrılmıyor'));
 });
 test('compile(): an unknown language falls back to English',()=>{
  const p=noOb1();
