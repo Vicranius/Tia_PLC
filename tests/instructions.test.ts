@@ -47,7 +47,7 @@ test('word logic: AND/OR/XOR on WORD and BYTE',()=>{
  assert.equal(calc('RB',op('XOR',tg('BY'),lit(0xFF)),{BY:0x0F}),0xF0);
  assert.equal(calc('RD',op('OR',tg('D'),lit(0x0000FFFF)),{D:0xFFFF0000}),0xFFFFFFFF);
 });
-test('word logic: AND/XOR on DWORD with bit 31 set',{todo:'AND/XOR return a signed JS int for DWORD (missing >>>0), so Memory.set throws out of range'},()=>{
+test('word logic: AND/XOR on DWORD with bit 31 set',()=>{
  assert.equal(calc('RD',op('AND',tg('D'),lit(0xFFFF0000)),{D:0xFFFFFFFF}),0xFFFF0000);
  assert.equal(calc('RD',op('XOR',tg('D'),lit(0xFFFFFFFF)),{D:0x0F0F0F0F}),0xF0F0F0F0);
 });
@@ -107,7 +107,7 @@ test('rotate: ROL/ROR wrap on WORD and BYTE',()=>{
  assert.equal(calc('RB',op('ROR',tg('BY'),lit(3)),{BY:0b00000101}),0b10100000);
  assert.equal(calc('R',op('ROL',tg('I'),lit(1)),{I:-32768}),1);
 });
-test('rotate: ROL/ROR on DWORD',{todo:'ROL/ROR on DWORD lose low bits when the rotation count exceeds ~21 (x*2**k+... exceeds 2^53)'},()=>{
+test('rotate: ROL/ROR on DWORD',()=>{
  assert.equal(calc('RD',op('ROL',tg('D'),lit(4)),{D:0x12345678}),0x23456781);
  assert.equal(calc('RD',op('ROR',tg('D'),lit(4)),{D:0x12345678}),0x81234567);
  assert.equal(calc('RD',op('ROL',tg('D'),lit(1)),{D:0x80000001}),3);
