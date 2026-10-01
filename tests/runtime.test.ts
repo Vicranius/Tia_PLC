@@ -1,6 +1,7 @@
 import './industrial.test';
 import './connections.test';
 import './status.test';
+import './portal.test';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {material} from '../src/challenges/private';

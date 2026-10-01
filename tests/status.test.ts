@@ -4,7 +4,7 @@ import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import Rung from '../src/ladder/Rung';
 import LadSymbol from '../src/ladder/LadSymbol';
-import {layoutRung} from '../src/ladder/geometry';
+import {layoutRung,LAD_GRID_X} from '../src/ladder/geometry';
 import {LAD_STATUS_COLOR,LAD_STATUS_DASH,flowStatus,statusDash,type FlowStatus} from '../src/ladder/status';
 import {material} from '../src/challenges/private';
 import {connectBranch} from '../src/plc/connections';
@@ -157,4 +157,23 @@ test('A network that ran at startup (OB100) turns gray once it is no longer exec
  assert.deepEqual(contact(html,'init-nc'),{in:'unknown',out:'unknown'},'OB100 is not executed on later scans');assert.ok(!html.includes('stroke-dasharray'));
  assert.ok(!wires(html).some(w=>w.status==='fulfilled'||w.status==='unfulfilled'));
  assert.ok(wires(draw(main,p.tags,rt.trace)).every(w=>w.status!=='unknown'),'OB1 network keeps its live colors');
+});
+
+// The left power rail is the power source: green whenever the network ran, regardless of the rung result.
+const rail=(html:string,n:Network)=>{const v=wires(html).find(w=>w.x1===LAD_GRID_X&&w.x2===LAD_GRID_X&&w.y2>w.y1);assert.ok(v,'left rail line');return {rail:v.status,feed:wireAt(html,LAD_GRID_X,layoutRung(n).terminalY)};};
+
+test('Left power rail stays green solid while the rung result is false',()=>{
+ const rt=scan(new Runtime(material(3).reference),{}),n=first(rt.program),html=look(rt);
+ assert.equal(rt.memory.read('MOTOR'),false);assert.deepEqual(coil(html),{in:'unfulfilled',out:'unfulfilled'},'rung result is false');
+ assert.deepEqual(rail(html,n),{rail:'fulfilled',feed:'fulfilled'});
+ scan(rt,{STOP:true});assert.deepEqual(rail(look(rt),n),{rail:'fulfilled',feed:'fulfilled'},'still green with STOP pressed');
+ scan(rt,{STOP:false,START:true});assert.deepEqual(rail(look(rt),n),{rail:'fulfilled',feed:'fulfilled'},'and when the rung is true');
+});
+
+test('Left power rail is gray for a network that was not executed and black offline',()=>{
+ const p=material(3).reference;p.blocks[1].networks=[{id:'startup',title:'Init RUN',logic:{id:'init-nc',type:'NC',tag:'STOP'},output:{type:'SET',tag:'RUN'}}];
+ const rt=new Runtime(p),init=p.blocks[1].networks[0];scan(rt,{},2);
+ assert.deepEqual(rail(draw(init,p.tags,rt.trace),init),{rail:'unknown',feed:'unknown'},'OB100 not executed on scan 2');
+ const n=first(p);assert.deepEqual(rail(draw(n,p.tags,rt.trace,false),n),{rail:'edit',feed:'edit'},'monitor off');
+ assert.deepEqual(rail(draw(n,p.tags,{},true),n),{rail:'edit',feed:'edit'},'no trace yet');
 });
