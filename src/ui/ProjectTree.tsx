@@ -7,12 +7,12 @@ import {AddIcon,BlockIcon,CpuIcon,DbIcon,DeviceConfigIcon,DevicesNetworksIcon,Ex
 
 export type EditorId='ladder:OB1'|'ladder:OB100'|'tags'|'watch'|'process'|'device'|'diagnostics'|'learning'|'overview';
 interface TreeNode {id:string;label:ShellKey|{text:string};icon:ReactNode;open?:EditorId;children?:TreeNode[];folder?:boolean;status?:boolean}
-interface Props {projectName:string;cpuName:string;blocks:Block[];tags:Tag[];active:EditorId;online:boolean;onOpen:(id:EditorId)=>void;onCollapse:()=>void}
+interface Props {projectName:string;cpuName:string;blocks:Block[];tags:Tag[];active:EditorId;online:boolean;differs?:Set<string>;onOpen:(id:EditorId)=>void;onCollapse:()=>void}
 
 const blockLabel=(b:Block)=>`${b.id==='OB1'?'Main':b.id==='OB100'?'Startup':b.id} [${b.id}]`;
 const folder=(id:string,label:ShellKey,children:TreeNode[]=[]):TreeNode=>({id,label,icon:<FolderIcon/>,children,folder:true});
 
-export default function ProjectTree({projectName,cpuName,blocks,tags,active,online,onOpen,onCollapse}:Props){
+export default function ProjectTree({projectName,cpuName,blocks,tags,active,online,differs,onOpen,onCollapse}:Props){
  const t=useT(shellDict);
  const [expanded,setExpanded]=useState<Set<string>>(()=>new Set(['project','plc','blocks','tags','watch','hmi','screens']));
  const [selected,setSelected]=useState('OB1'),[tab,setTab]=useState<'devices'|'plant'>('devices'),[details,setDetails]=useState(true);
@@ -43,7 +43,7 @@ export default function ProjectTree({projectName,cpuName,blocks,tags,active,onli
   <div className={`tia-tree-row${selected===n.id?' selected':''}${isActive(n)?' active':''}`} style={{paddingLeft:4+depth*16}} tabIndex={selected===n.id?0:-1} title={n.open?t('tree.openHint'):undefined}
    onClick={()=>setSelected(n.id)} onDoubleClick={()=>{if(n.open)onOpen(n.open);else if(expandable)toggle(n.id);}}
    onKeyDown={e=>{if(e.key==='Enter'&&n.open)onOpen(n.open);if(e.key==='ArrowRight'&&expandable&&!open)toggle(n.id);if(e.key==='ArrowLeft'&&expandable&&open)toggle(n.id);}}>
-   <span className="tia-tree-toggle" onClick={e=>{e.stopPropagation();if(expandable)toggle(n.id);}}>{expandable?(open?'▾':'▸'):''}</span>{n.icon}<span className="tia-tree-label">{text(n)}</span>{online&&n.status&&<span className="tia-tree-status" title={t('tree.consistent')}>●</span>}
+   <span className="tia-tree-toggle" onClick={e=>{e.stopPropagation();if(expandable)toggle(n.id);}}>{expandable?(open?'▾':'▸'):''}</span>{n.icon}<span className="tia-tree-label">{text(n)}</span>{online&&n.status&&(()=>{const bad=differs?.has(n.id)||((n.id==='plc'||n.id==='blocks')&&!!differs?.size);return <span className={`tia-tree-status${bad?' differs':''}`} title={bad?t('tree.differs'):t('tree.consistent')}>{bad?'◐':'●'}</span>;})()}
   </div>
   {expandable&&open&&<ul role="group">{n.children!.length?n.children!.map(c=>row(c,depth+1)):<li className="tia-tree-empty" style={{paddingLeft:24+(depth+1)*16}}>{t('tree.notAvailable')}</li>}</ul>}
  </li>;};

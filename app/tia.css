@@ -240,3 +240,46 @@
 .tia-shell .ribbon-group small{display:none}
 .tia-shell .block-title{background:#e9e9e9;font-size:12px}
 .tia-shell .networkhead{background:var(--tia-network-head)}
+
+/* PLC simulation window (floating, draggable) */
+.tia-plcsim{position:fixed;right:28px;bottom:48px;z-index:60;width:290px;background:#f0f0f0;border:1px solid #6f7b87;box-shadow:0 6px 18px rgba(0,0,0,.28);font:12px 'Segoe UI',Tahoma,Arial,sans-serif;color:#1e1e1e}
+.tia-plcsim-title{display:flex;align-items:center;justify-content:space-between;height:24px;padding:0 4px 0 8px;background:#3e4c59;color:#fff;font-weight:600;cursor:move;user-select:none;touch-action:none}
+.tia-plcsim-title button{border:0;background:transparent;color:#fff;padding:2px;border-radius:0;display:inline-flex}
+.tia-plcsim-title button:hover{background:#c0392b}
+.tia-plcsim-body{padding:8px;display:grid;gap:7px}
+.tia-plcsim-row{display:flex;justify-content:space-between;gap:8px}
+.tia-plcsim-row code{font:12px Consolas,monospace}
+.tia-plcsim-main{display:flex;justify-content:space-between;align-items:flex-start;border:1px solid #c9c9c9;background:#fafafa;padding:8px}
+.tia-plcsim button{font:inherit}
+.tia-plcsim .tia-cpu-buttons button{width:64px;height:22px;border:1px solid #8c8c8c;background:linear-gradient(#fdfdfd,#e1e1e1);font-weight:600;font-size:11px;border-radius:0;color:#1e1e1e;padding:0}
+.tia-plcsim .tia-cpu-buttons button.pressed{background:linear-gradient(#d9d9d9,#efefef);box-shadow:inset 0 1px 2px rgba(0,0,0,.25)}
+.tia-plcsim .tia-cpu-buttons button:disabled{opacity:.55}
+.tia-plcsim-state{margin:0;font-size:11px;color:#2e7d32}.tia-plcsim-state.warn{color:#b26a00}
+
+/* Modal dialogs (download sequence) */
+.tia-modal-backdrop{position:fixed;inset:0;z-index:70;background:rgba(30,30,30,.25);display:grid;place-items:center;padding:16px}
+.tia-dialog{width:min(760px,100%);max-height:calc(100dvh - 32px);display:flex;flex-direction:column;background:#f0f0f0;border:1px solid #6f7b87;box-shadow:0 10px 30px rgba(0,0,0,.35);font:12px 'Segoe UI',Tahoma,Arial,sans-serif;color:#1e1e1e}
+.tia-dialog-title{display:flex;align-items:center;justify-content:space-between;height:26px;padding:0 4px 0 10px;background:#3e4c59;color:#fff;font-weight:600}
+.tia-dialog-title button{border:0;background:transparent;color:#fff;padding:2px;border-radius:0;display:inline-flex}
+.tia-dialog-title button:hover{background:#c0392b}
+.tia-dialog-body{padding:12px 14px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+.tia-dialog-body h4{margin:4px 0 0;font-size:12px}
+.tia-dl-device{display:flex;gap:12px;align-items:center}
+.tia-dl-device div{display:grid}
+.tia-form-grid{display:grid;grid-template-columns:200px minmax(0,260px);gap:5px 10px;align-items:center}
+.tia-form-grid select{height:21px;font:12px 'Segoe UI',Tahoma,sans-serif;border:1px solid #a9b4be;background:#fff;border-radius:0}
+.tia-dl-table{border:1px solid #c9c9c9}
+.tia-dl-table tr.selected td{background:#cde3f7}
+.tia-dl-table td{white-space:normal;max-width:none}
+.tia-dl-table select{height:20px;font:12px 'Segoe UI',Tahoma,sans-serif;border-radius:0}
+.tia-dl-status{display:flex;align-items:center;gap:6px;margin:0;min-height:18px}
+.tia-dl-progress{color:#555;margin-right:8px}
+.tia-dialog-buttons{display:flex;align-items:center;gap:6px;padding-top:4px}
+.tia-dialog-buttons button{min-width:84px;height:24px;border:1px solid #8c8c8c;background:linear-gradient(#fdfdfd,#e1e1e1);border-radius:0;font:12px 'Segoe UI',Tahoma,sans-serif;color:#1e1e1e;padding:0 10px}
+.tia-dialog-buttons button.primary{border-color:#3e4c59;background:linear-gradient(#5d6c7a,#3e4c59);color:#fff}
+.tia-dialog-buttons button:disabled{opacity:.5}
+.tia-check{display:inline-flex;align-items:center;gap:5px}
+
+/* Online ≠ offline */
+.tia-differs{padding:4px 10px;background:#fff4e0;border-bottom:1px solid #e8b46a;color:#7a4b00;font-size:12px}
+.tia-tree-status.differs{color:#e8862a}
