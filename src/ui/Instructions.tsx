@@ -20,7 +20,7 @@ const basic:[K,Item[]][]=[
  ['g.math',[['ADD','V1.0'],['SUB','V1.0'],['MUL','V1.0'],['DIV','V1.0'],['MOD','V1.0'],['NEG',''],['ABS',''],['MIN',''],['MAX',''],['LIMIT',''],['SQR',''],['SQRT','']]],
  ['g.move',[['MOVE','']]],
  ['g.convert',[['INT_TO_REAL',''],['REAL_TO_INT',''],['WORD_TO_INT',''],['NORM_X',''],['SCALE_X','']]],
- ['g.program',[]],
+ ['g.program',[['JMP',''],['JMPN',''],['LABEL',''],['RET','']]],
  ['g.word',[['AND',''],['OR',''],['XOR',''],['INVERT',''],['DECO',''],['ENCO',''],['SEL','']]],
  ['g.shift',[['SHR',''],['SHL',''],['ROR',''],['ROL','']]],
 ];
@@ -35,7 +35,7 @@ export default function Instructions({insert,disabled,onProblem,blocks=[]}:{inse
  const [sections,setSections]=useState<Set<string>>(()=>new Set(['basic'])),[folders,setFolders]=useState<Set<string>>(()=>new Set(['g.bit','g.timer']));
  const flip=(set:Set<string>,id:string)=>{const next=new Set(set);if(next.has(id))next.delete(id);else next.add(id);return next;};
  const query=search.trim().toLowerCase(),match=(kind:string)=>!query||`${label(kind)} ${t(`d.${kind}` as K)}`.toLowerCase().includes(query);
- const row=(kind:string,version:string,depth=1)=><button key={kind} className="tia-instr-row" style={{paddingLeft:6+depth*16}} disabled={disabled} title={`${label(kind)} — ${t(`d.${kind}` as K)}`} onClick={()=>insert(kind)} onDoubleClick={e=>e.preventDefault()}><span className="tia-instr-name"><span className="tia-instr-icon"><InstructionIcon kind={kind}/></span>{label(kind)}</span><span>{t(`d.${kind}` as K)}</span><span>{version}</span></button>;
+ const row=(kind:string,version:string,depth=1)=><button key={kind} className="tia-instr-row" style={{paddingLeft:6+depth*16}} disabled={disabled} title={`${label(kind)} — ${t(`d.${kind}` as K)}`} onClick={()=>insert(kind)} onDoubleClick={e=>e.preventDefault()}><span className="tia-instr-name"><span className="tia-instr-icon"><InstructionIcon kind={kind} list/></span>{label(kind)}</span><span>{t(`d.${kind}` as K)}</span><span>{version}</span></button>;
  const folder=(id:K,items:Item[]|null)=>{const visible=items?.filter(([k])=>match(k))??[];if(query&&!visible.length)return null;const open=query?true:folders.has(id);return <div key={id}><button className="tia-instr-row folder" aria-expanded={open} onClick={()=>setFolders(f=>flip(f,id))}><span className="tia-instr-name"><span className="tia-tree-toggle">{open?'▾':'▸'}</span><FolderIcon/>{t(id)}</span><span/><span/></button>{open&&(items&&items.length?visible.map(([k,v])=>row(k,v,2)):<p className="tia-card-empty indent">{t('notAvailable')}</p>)}</div>;};
  const columns=<div className="tia-instr-head"><span>{t('col.name')}</span><span>{t('col.description')}</span><span>{t('col.version')}</span></div>;
  const section=(id:string,title:K,body:React.ReactNode,grow=false)=><CardSection key={id} title={t(title)} open={!!query||sections.has(id)} grow={grow} onToggle={()=>setSections(s=>flip(s,id))}>{body}</CardSection>;

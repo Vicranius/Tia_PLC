@@ -1,19 +1,19 @@
-import type {Expr,Network} from '../plc/model';
+import {CALC_PINS,type Expr,type Network} from '../plc/model';
 
 export const LAD_GRID_X=64;
 export const LAD_GRID_Y=48;
 export const LAD_STROKE=2;
 export const LAD_MIN_RUNG_CELLS=9;
-export type SymbolKind='NO'|'NC'|'P'|'N'|'NOT'|'COIL'|'SET'|'RESET';
+export type SymbolKind='NO'|'NC'|'P'|'N'|'NOT'|'COIL'|'SET'|'RESET'|'JMP'|'JMPN'|'RET';
 /** Fixed electrical cell. Labels are deliberately not an input. */
 export function symbolGeometry(kind:SymbolKind,x=0,y=0){
  const width=LAD_GRID_X,height=LAD_GRID_Y,cx=x+width/2,cy=y+height/2,halfBody=10;
  const left=x,right=x+width,bodyLeft=cx-halfBody,bodyRight=cx+halfBody;
- const coil=['COIL','SET','RESET'].includes(kind);
+ const coil=['COIL','SET','RESET','JMP','JMPN','RET'].includes(kind);
  const paths=coil
   ? [`M ${cx-5} ${cy-10} Q ${cx-15} ${cy} ${cx-5} ${cy+10}`,`M ${cx+5} ${cy-10} Q ${cx+15} ${cy} ${cx+5} ${cy+10}`]
   : [`M ${bodyLeft} ${cy-10} V ${cy+10}`,`M ${bodyRight} ${cy-10} V ${cy+10}`,...(kind==='NOT'?[`M ${bodyLeft} ${cy-10} H ${bodyRight}`,`M ${bodyLeft} ${cy+10} H ${bodyRight}`]:[]),...(kind==='NC'?[`M ${cx-7} ${cy+10} L ${cx+7} ${cy-10}`]:[])];
- return {width,height,cx,cy,left,right,bodyLeft,bodyRight,leftWireLength:bodyLeft-left,rightWireLength:right-bodyRight,paths,letter:kind==='NOT'?'NOT':kind==='SET'?'S':kind==='RESET'?'R':kind==='P'?'P':kind==='N'?'N':''};
+ return {width,height,cx,cy,left,right,bodyLeft,bodyRight,leftWireLength:bodyLeft-left,rightWireLength:right-bodyRight,paths,letter:kind==='NOT'||kind==='JMP'||kind==='JMPN'||kind==='RET'?kind:kind==='SET'?'S':kind==='RESET'?'R':kind==='P'?'P':kind==='N'?'N':''};
 }
 export type LogicPort='IN'|'CU'|'CD'|'R'|'LD';
 export interface PlacedLogic {layout:LogicLayout;x:number;y:number;port:LogicPort}
@@ -50,5 +50,5 @@ export function layoutLogic(expr:Expr):LogicLayout {
 export function layoutRung(network:Network,callRows=0):RungLayout {
  const logic=layoutLogic(network.logic),logicX=LAD_GRID_X,logicY=0;
  const terminalY=logic.terminalY,coilX=logicX+logic.width,coilWidth=network.output.type==='MOVE'?3*LAD_GRID_X:network.output.type==='CALL'?5*LAD_GRID_X:LAD_GRID_X,rightRailX=Math.max(logicX+LAD_MIN_RUNG_CELLS*LAD_GRID_X,coilX+coilWidth);
- return {logic,logicX,logicY,terminalY,coilX,coilWidth,rightRailX,width:rightRailX+LAD_GRID_X,height:Math.max(logic.height+(network.output.type==='MOVE'?LAD_GRID_Y:0),3*LAD_GRID_Y,network.output.type==='CALL'?terminalY+24*callRows+3*LAD_GRID_Y/2:0)};
+ return {logic,logicX,logicY,terminalY,coilX,coilWidth,rightRailX,width:rightRailX+LAD_GRID_X,height:Math.max(logic.height+(network.output.type==='MOVE'?(network.output.value?.kind==='calc'&&CALC_PINS[network.output.value.op].length>2?2:1)*LAD_GRID_Y:0),3*LAD_GRID_Y,network.output.type==='CALL'?terminalY+24*callRows+3*LAD_GRID_Y/2:0)};
 }

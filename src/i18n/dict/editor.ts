@@ -15,7 +15,7 @@ export const editorDict=defineDict({
  'inspector.title':'Element properties','inspector.contactType':'Contact type','inspector.contactOperand':'Contact operand / tag',
  'inspector.timerInstruction':'Timer instruction','inspector.counterInstruction':'Counter instruction','inspector.instanceName':'Instance name','inspector.timerInstance':'Timer instance name','inspector.counterInstance':'Counter instance name','inspector.ptOperand':'PT operand','inspector.pvOperand':'PV operand',
  'inspector.timerOutputs':'BOOL output: {instance}.Q · TIME output: {instance}.ET','inspector.counterOutputs':'BOOL outputs: {instance}.{bool} · Numeric output: {instance}.CV',
- 'inspector.comparison':'Comparison','inspector.groupLogic':'Group logic','inspector.why':'Why TRUE / FALSE?','inspector.outputInstruction':'Output instruction','inspector.outputTag':'Output tag',
+ 'inspector.comparison':'Comparison','inspector.groupLogic':'Group logic','inspector.why':'Why TRUE / FALSE?','inspector.outputInstruction':'Output instruction','inspector.outputTag':'Output tag','inspector.jumpTarget':'Jump label (target)','inspector.jumpLabel':'Jump label of this network (LABEL)',
  // operand editors
  'time.operandType':'PT operand type','time.duration':'PT duration (ms)','time.tag':'PT TIME tag',
  'value.operandType':'Operand type','value.literal':'Constant','value.tag':'Tag','value.constant':'Constant value','value.numericTag':'Numeric tag',
@@ -46,7 +46,7 @@ export const editorDict=defineDict({
  'inspector.title':'Eleman özellikleri','inspector.contactType':'Kontak türü','inspector.contactOperand':'Kontak operandı / tag',
  'inspector.timerInstruction':'Zamanlayıcı komutu','inspector.counterInstruction':'Sayıcı komutu','inspector.instanceName':'Instance adı','inspector.timerInstance':'Zamanlayıcı instance adı','inspector.counterInstance':'Sayıcı instance adı','inspector.ptOperand':'PT operandı','inspector.pvOperand':'PV operandı',
  'inspector.timerOutputs':'BOOL çıkış: {instance}.Q · TIME çıkış: {instance}.ET','inspector.counterOutputs':'BOOL çıkışlar: {instance}.{bool} · Sayısal çıkış: {instance}.CV',
- 'inspector.comparison':'Karşılaştırma','inspector.groupLogic':'Grup mantığı','inspector.why':'Neden TRUE / FALSE?','inspector.outputInstruction':'Çıkış komutu','inspector.outputTag':'Çıkış tag',
+ 'inspector.comparison':'Karşılaştırma','inspector.groupLogic':'Grup mantığı','inspector.why':'Neden TRUE / FALSE?','inspector.outputInstruction':'Çıkış komutu','inspector.outputTag':'Çıkış tag','inspector.jumpTarget':'Atlama etiketi (hedef)','inspector.jumpLabel':'Bu network’ün atlama etiketi (LABEL)',
  'time.operandType':'PT operand türü','time.duration':'PT süresi (ms)','time.tag':'PT TIME tag',
  'value.operandType':'Operand türü','value.literal':'Sabit','value.tag':'Tag','value.constant':'Sabit değer','value.numericTag':'Sayısal tag',
  'rung.network':'{title} Ladder network’ü','rung.iecCounter':'IEC sayıcı','rung.iecCounterOutput':'IEC sayıcı çıkışı · BOOL','rung.tagName':'Tag adı',
