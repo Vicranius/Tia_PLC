@@ -58,6 +58,24 @@ ceiling. To get pixel-level fidelity:
 4. **Design tokens.** Move every size and color into one `:root` token block, so calibration means editing
    one number instead of chasing overrides.
 
+## 2b. V20 reference (from the user's screenshots, 1920 px wide)
+
+| Element | Measured | Implemented in |
+|---|---|---|
+| Menu bar / toolbar | 22 px / 26 px, gray gradient, icons 16 px, text on "Save project", "Go online", "Go offline", "<Search in project>" box | `src/ui/shell/TopBar.tsx` |
+| Wordmark | Two right-aligned lines across both rows (TIA's text is a trademark; ours reads "PLC Lab Web / TRAINER") | `TopBar.tsx` |
+| Left strip | 20 px, dark top segment with vertical "PLC programming" | `Lab.tsx`, `app/tia.css` |
+| Pane title bars | 23 px; medium slate for panes, dark slate for the active editor, **orange while online** | `app/tia.css` (`--tia-title*`, `--tia-online`) |
+| Project tree | Devices / Plant objects tabs, 19 px rows, colored object icons, Details view (Name / Address) | `src/ui/ProjectTree.tsx`, `shell/TiaIcons.tsx` |
+| Editor | Breadcrumb title with window buttons, editor toolbar, "Block interface" strip, favorites bar, Block title, Network rows, zoom box bottom-right | `Lab.tsx` |
+| LAD | Teal operand address, quoted black name, light-gray boxes with darker header band, blue literal values with orange stubs | `src/ladder/Rung.tsx`, `app/tia.css` |
+| Inspector | Object title left; Properties / Info / Diagnostics right; secondary tabs; property form with left navigation | `shell/Inspector.tsx`, `shell/InspectorPanes.tsx` |
+| Task cards | Section headers (Favorites, Basic instructions, Extended instructions, Technology, Communication, Optional packages), Name/Description/Version columns, vertical tabs Instructions / Testing / Tasks / Libraries / Add-ins | `shell/TaskCards.tsx`, `Instructions.tsx`, `shell/Cards.tsx` |
+| Editor bar | 30 px near-black; "◀ Portal view", Overview, open editor tabs (active white), status message with check icon | `shell/EditorBar.tsx` |
+
+Usage now follows TIA: tree items open on double-click, monitoring (glasses) requires Go online, CPU RUN/STOP/MRES
+lives in the Testing card's CPU operator panel, compile results and messages are in Info.
+
 ## 3. Roadmap
 
 ### Phase 1 — done in this change
@@ -67,7 +85,7 @@ ceiling. To get pixel-level fidelity:
   exercises, first steps), Devices & networks, PLC programming (block list), Visualization, Online &
   Diagnostics. Includes the "Project view" switch and the "◄ Portal view" button in the editor bar.
 
-### Phase 2 — Project-view chrome (G3, G5, G6, G12)
+### Phase 2 — Project-view chrome (G3, G5, G6, G12) — largely done (see 2b)
 - Design-token pass over `app/globals.css`; split `src/ui/Lab.tsx` into `Shell`, `MainToolbar`,
   `InspectorWindow`, `EditorBar`, `StatusLine`.
 - TIA icon toolbar with "Search in project"; add the Window menu.
@@ -75,7 +93,7 @@ ceiling. To get pixel-level fidelity:
 - Restructure the project tree to the TIA hierarchy; HMI_1 becomes its own device.
 - Collapsed panes show vertical labels (Project tree, task-card tabs), as TIA does.
 
-### Phase 3 — Online workflow (G4)
+### Phase 3 — Online workflow (G4) — Go online/offline with orange title bars and CPU operator panel done; PLCSIM window and download dialog open
 - `online` state machine: offline → simulation started → downloaded → online → monitoring.
 - PLCSIM-style compact window with RUN/STOP/ERROR/MAINT LEDs and RUN/STOP/MRES.
 - Download dialog with Load preview (stop modules, overwrite blocks) and Load result.
