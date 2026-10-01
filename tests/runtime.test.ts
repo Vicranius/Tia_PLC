@@ -6,6 +6,7 @@ import './i18n-plc.test';
 import './i18n-server.test';
 import './i18n.test';
 import './i18n-content.test';
+import './i18n-ui.test';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {material} from '../src/challenges/private';
@@ -221,7 +222,7 @@ test('Timer and counter blocks expose double-click operand targets',()=>{
  const tags=material(3).reference.tags;
  const timer={id:'n',title:'Timer',logic:{id:'t',type:'TON' as const,instance:'T1',pt:1000,input:{id:'a',type:'NO' as const,tag:'START'}},output:{type:'COIL' as const,tag:'MOTOR'}};
  const markup=renderToStaticMarkup(createElement(Rung,{network:timer,tags,trace:{},monitor:false,locked:false,selected:'',onSelect:()=>{},onWhy:()=>{},onMove:()=>{},onTag:()=>{},onOperand:()=>{},onInsert:()=>{}}));
- assert.match(markup,/aria-label="PT operandını düzenle"/);assert.match(markup,/aria-label="ET çıkış tagini düzenle"/);
+ assert.match(markup,/aria-label="Edit PT operand"/);assert.match(markup,/aria-label="Edit ET output tag"/);
 });
 
 for(const [command,type] of [['NO','NO'],['NC','NC'],['R_TRIG','P'],['F_TRIG','N']] as const)test(`${command} inserts ONE unassigned contact, never an automatic START`,()=>{
