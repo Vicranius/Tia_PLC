@@ -272,7 +272,7 @@ test('Worker: lang in load, {action:"lang"} switches subsequent snapshots withou
 
  // Errors raised inside the worker use the active language too.
  w.send({action:'input',tag:'VALVE',value:true});
- assert.equal(w.last().mode,'ERROR');assert.ok((w.last().error??'').includes('Only inputs can be changed'),w.last().error);
+ assert.equal(w.last().mode,'RUN','a rejected input is reported but does not stop the CPU');assert.ok((w.last().error??'').includes('Only inputs can be changed'),w.last().error);
  w.send({action:'lang',lang:'tr'});w.send({action:'load',program:traced(),plant:'water'});
  assert.equal(w.last().mode,'STOP');assert.equal(w.last().error,undefined);
  w.send({action:'input',tag:'VALVE',value:true});

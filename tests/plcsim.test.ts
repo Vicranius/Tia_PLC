@@ -20,13 +20,14 @@ const has=(lang:Lang,html:string,...keys:(keyof typeof shellDict.en)[])=>{const 
 const disabledButton=(html:string,text:string)=>new RegExp(`<button[^>]*disabled=""[^>]*>${text}</button>`).test(html);
 
 // ---- dictionary: new keys ----
-const NEW_KEYS=['plcsim.title','plcsim.ip','plcsim.close','plcsim.closed','plcsim.notLoaded','plcsim.loaded','plcsim.differs','plcsim.dock','dl.title','dl.preview','dl.results','dl.search','dl.searching','dl.found','dl.none','dl.load','dl.cancel','dl.finish','dl.ready','dl.notReady','dl.stopModules','dl.stopAll','dl.noAction','dl.software','dl.compileErrors','dl.loading','dl.startAll','dl.done','msg.needDownload','msg.noSimulation','msg.differs','msg.simClosed','testing.needOnline','tree.differs','tree.forceTable','view.force'] as const;
+const NEW_KEYS=['plcsim.title','plcsim.ip','plcsim.close','plcsim.notLoaded','plcsim.loaded','plcsim.differs','plcsim.dock','dl.title','dl.preview','dl.results','dl.search','dl.searching','dl.found','dl.none','dl.load','dl.cancel','dl.finish','dl.ready','dl.notReady','dl.stopModules','dl.stopAll','dl.noAction','dl.software','dl.compileErrors','dl.loading','dl.startAll','dl.done','msg.needDownload','msg.noSimulation','msg.differs','msg.simClosed','testing.needOnline','tree.differs','tree.forceTable','view.force'] as const;
 test('shellDict: download / simulation / differs keys exist in en and tr, are translated, keep placeholders',()=>{
  const d=shellDict as unknown as Record<Lang,Record<string,string>>;
  for(const k of NEW_KEYS){for(const lang of LANGS)assert.ok(d[lang][k]?.trim(),`${lang} ${k}`);}
  assert.equal(d.en['dl.compileErrors'].includes('{n}'),true);assert.equal(d.tr['dl.compileErrors'].includes('{n}'),true);
  assert.equal(d.en['msg.differs'].includes('{block}'),true);assert.equal(d.tr['msg.differs'].includes('{block}'),true);
  for(const k of NEW_KEYS)if(!['dl.software','dl.load'].includes(k))assert.notEqual(d.en[k],d.tr[k],`${k} is identical in en and tr`);
+ for(const k of ['plcsim.closed','plcsim.project','dl.check'])for(const lang of LANGS)assert.ok(!(k in d[lang]),`${k} was removed`);
  // TIA wording
  assert.equal(d.en['dl.title'],'Extended download to device');assert.equal(d.en['dl.preview'],'Load preview');assert.equal(d.en['dl.results'],'Load results');assert.equal(d.en['dl.search'],'Start search');assert.equal(d.en['dl.startAll'],'Start all');assert.equal(d.en['dl.finish'],'Finish');
  assert.equal(d.tr['dl.search'],'Aramayı başlat');assert.equal(d.tr['dl.finish'],'Bitir');assert.equal(d.tr['dl.startAll'],'Tümünü başlat');
@@ -125,4 +126,14 @@ test('Worker: the CPU runs the downloaded program; a second download replaces it
  w.send({action:'input',tag:'START',value:true});w.send({action:'run'});w.tick();assert.equal(w.last().snapshot?.outputs.LAMP,true);assert.equal(w.last().snapshot?.outputs.MOTOR,false);
  w.send({action:'clear',plant:'motor'});assert.equal(w.last().mode,'STOP');assert.equal(w.last().snapshot,undefined);
  w.tick();assert.equal(w.last().snapshot,undefined,'nothing runs after unload');
+});
+
+// ---- Plcsim: mode in the title, collapse button ----
+test('Plcsim SSR: title shows the CPU mode; collapse and close buttons are labelled per language; starts expanded',()=>{
+ for(const lang of LANGS){
+  for(const mode of ['STOP','RUN']){const html=sim(lang,{mode});assert.ok(html.includes(`${shellDict[lang]['plcsim.title']} · ${mode}`),`${lang} ${mode}`);}
+  const html=sim(lang);has(lang,html,'pane.collapse','plcsim.close');assert.match(html,/tia-plcsim-body/);
+  assert.doesNotMatch(html,/led red"><\/i>ERROR/,'no red ERROR LED when the CPU is fine');
+  clean(lang,html,'Plcsim/title');
+ }
 });

@@ -47,31 +47,46 @@ test('parseValue: decimal, 16#, 2# and T# input incl. negative numbers',()=>{
  assert.equal(parseValue('42','INT'),42);assert.equal(parseValue('-42','INT'),-42);assert.equal(parseValue(' -7 ','DINT'),-7);assert.equal(parseValue('0','BYTE'),0);
  assert.equal(parseValue('16#FF','BYTE'),255);assert.equal(parseValue('16#ff','BYTE'),255,'lower case');assert.equal(parseValue('16#FFFF','WORD'),65535);assert.equal(parseValue('16#00FF','INT'),255);assert.equal(parseValue('16#FFFFFFFF','DWORD'),4294967295);
  assert.equal(parseValue('2#101','BYTE'),5);assert.equal(parseValue('2#0000000000000101','WORD'),5);
- assert.equal(parseValue('T#1500','TIME'),1500);assert.equal(parseValue('T#1500MS','TIME'),1500);assert.equal(parseValue('t#250ms','TIME'),250);assert.equal(parseValue('T#-250MS','TIME'),-250);
- assert.equal(parseValue('3.75','REAL'),3.75);assert.equal(parseValue('-0.5','REAL'),-0.5);assert.equal(parseValue('1e3','REAL'),1000);assert.equal(parseValue('3.99','INT'),3,'integers truncate');assert.equal(parseValue('-3.99','INT'),-3);
+ assert.equal(parseValue('T#1500MS','TIME'),1500);assert.equal(parseValue('t#250ms','TIME'),250);assert.equal(parseValue('T#-250MS','TIME'),-250);
+ assert.equal(parseValue('3.75','REAL'),3.75);assert.equal(parseValue('-0.5','REAL'),-0.5);assert.equal(parseValue('1e3','REAL'),1000);assert.equal(parseValue('3.99','INT'),undefined,'fractions are rejected for integer types');assert.equal(parseValue('-3.99','DINT'),undefined);
 });
 test('parseValue: invalid input is rejected',()=>{
  for(const ty of types.filter(x=>x!=='BOOL'))for(const text of ['','   ','abc','1,5','NaN','Infinity','--5','12abc','16#','16#XYZ','2#','T#abc'])assert.equal(parseValue(text,ty),undefined,`${ty} "${text}"`);
 });
-// Known weak spots of parseValue (found by T3): lenient parseInt / empty T# / unit suffixes. They pass as soon as the parser is strict.
-test('parseValue: strict radix and time literals',{todo:'parseInt accepts trailing garbage, "T#" is 0, T#5S/T#1S500MS are rejected'},()=>{
- assert.equal(parseValue('16#FFZZ','WORD'),undefined,'16#FFZZ must be invalid, not 255');
- assert.equal(parseValue('2#102','BYTE'),undefined,'2#102 must be invalid, not 1');
- assert.equal(parseValue('T#','TIME'),undefined,'empty T# must be invalid, not 0');
- assert.equal(parseValue('T#5S','TIME'),5000);assert.equal(parseValue('T#1S500MS','TIME'),1500);
+test('parseValue: strict radix digits, numeric syntax and empty literals',()=>{
+ assert.equal(parseValue('16#FFZZ','WORD'),undefined,'16#FFZZ');assert.equal(parseValue('2#102','BYTE'),undefined,'2#102');assert.equal(parseValue('T#','TIME'),undefined,'empty T#');
+ for(const text of ['16#','2#','0x10','1_000','1.2.3','1e','e5','+','-','.','T#MS','T#S','T#1X','T#1S1S','T#1MS1S','T#1500'])for(const ty of ['WORD','INT','TIME','REAL'] as const)assert.equal(parseValue(text,ty),undefined,`${ty} "${text}"`);
+});
+test('parseValue: TIME literals with D/H/M/S/MS units',()=>{
+ const t=(s:string)=>parseValue(s,'TIME');
+ assert.equal(t('T#5S'),5000);assert.equal(t('T#1S500MS'),1500);assert.equal(t('T#1M'),60000);assert.equal(t('T#250MS'),250);assert.equal(t('t#2h'),7200000);assert.equal(t('T#1D'),86400000);
+ assert.equal(t('T#1H30M'),5400000);assert.equal(t('T#1M30S'),90000);assert.equal(t('T#1D2H3M4S5MS'),93784005);assert.equal(t('T#-5S'),-5000);assert.equal(t('T#-250MS'),-250);assert.equal(t('T#0MS'),0);
+ assert.equal(t('T#25D'),undefined,'beyond the TIME range (T#24D20H31M23S647MS)');assert.equal(t('T#-25D'),undefined);assert.equal(t('T#24D20H31M23S647MS'),2147483647);
+});
+test('parseValue: per-type ranges',()=>{
+ const ok:[DataType,string,number][]=[['BYTE','0',0],['BYTE','255',255],['WORD','65535',65535],['DWORD','4294967295',4294967295],['INT','-32768',-32768],['INT','32767',32767],['DINT','-2147483648',-2147483648],['DINT','2147483647',2147483647],['TIME','2147483647',2147483647],['TIME','-2147483648',-2147483648]];
+ for(const [ty,text,v] of ok)assert.equal(parseValue(text,ty),v,`${ty} ${text}`);
+ const bad:[DataType,string][]=[['BYTE','256'],['BYTE','-1'],['WORD','65536'],['WORD','-1'],['DWORD','4294967296'],['DWORD','-1'],['INT','32768'],['INT','-32769'],['DINT','2147483648'],['DINT','-2147483649'],['TIME','2147483648'],['BYTE','16#100'],['WORD','16#10000'],['BYTE','2#100000000'],['BYTE','1.5'],['INT','3.99'],['INT','1e3x']];
+ for(const [ty,text] of bad)assert.equal(parseValue(text,ty),undefined,`${ty} ${text}`);
+ assert.equal(parseValue('1e3','INT'),1000,'integral exponent is fine');assert.equal(parseValue('1e3','REAL'),1000);assert.equal(parseValue('.5','REAL'),0.5);assert.equal(parseValue('-.5e1','REAL'),-5);
+});
+test('parseValue: signed hex/binary input is two\'s complement within the type width',()=>{
+ assert.equal(parseValue('16#FFFF','INT'),-1);assert.equal(parseValue('16#8000','INT'),-32768);assert.equal(parseValue('16#7FFF','INT'),32767);assert.equal(parseValue('16#10000','INT'),undefined);assert.equal(parseValue('16#0','INT'),0);
+ assert.equal(parseValue('2#1111111111111111','INT'),-1);assert.equal(parseValue('2#10000000000000000','INT'),undefined);
+ assert.equal(parseValue('16#FFFFFFFF','DINT'),-1);assert.equal(parseValue('16#80000000','DINT'),-2147483648);assert.equal(parseValue('16#100000000','DINT'),undefined);assert.equal(parseValue(`2#${'1'.repeat(32)}`,'DINT'),-1);
+ assert.equal(parseValue('16#FFFF','WORD'),65535,'unsigned types stay unsigned');assert.equal(parseValue('16#FFFFFFFF','DWORD'),4294967295);
 });
 test('formatValue/parseValue round-trip for every type and format',()=>{
  const cases:[DataType,number|boolean][]=[['BOOL',true],['BOOL',false],['BYTE',0],['BYTE',255],['WORD',0],['WORD',65535],['WORD',4660],['DWORD',0],['DWORD',4294967295],['INT',-32768],['INT',32767],['INT',-1],['DINT',-2147483648],['DINT',2147483647],['DINT',-99],['REAL',3.25],['REAL',-12.5],['TIME',0],['TIME',-5000],['TIME',1234567]];
  const formats:Record<DataType,string[]>={BOOL:['Bool'],BYTE:['Hex','DEC','Bin'],WORD:['Hex','DEC','Bin'],DWORD:['Hex','DEC','Bin'],INT:['DEC+/-','Hex','Bin'],DINT:['DEC+/-','Hex','Bin'],REAL:['Floating-point number'],TIME:['Time','DEC+/-']};
  for(const [ty,v] of cases)for(const fmt of formats[ty]){
   const text=formatValue(v,ty,fmt),back=parseValue(text,ty);
-  // Signed types shown as Hex/Bin come back unsigned (two's complement); they must still map to the same bit pattern.
-  const signed=(ty==='INT'||ty==='DINT')&&(fmt==='Hex'||fmt==='Bin')&&typeof v==='number'&&v<0;
-  if(signed){const bits=ty==='INT'?16:32;assert.equal(back,v+2**bits,`${ty} ${fmt} ${text}`);}else assert.equal(back,v,`${ty} ${fmt} ${text}`);
+  assert.equal(back,v,`${ty} ${fmt} ${text}`);
  }
 });
-test('Hex/Bin text of a negative INT parses to a value that is out of range for INT (the editor must not feed it to the CPU)',()=>{
- const back=parseValue(formatValue(-1,'INT','Hex'),'INT');assert.equal(back,65535);assert.equal(validScalar('INT',back!),false);
+test('Hex/Bin text of a negative INT/DINT parses back to the same negative value and is always valid for the CPU',()=>{
+ for(const [ty,v] of [['INT',-1],['INT',-32768],['DINT',-1],['DINT',-2147483648]] as const)for(const f of ['Hex','Bin']){const back=parseValue(formatValue(v,ty,f),ty);assert.equal(back,v);assert.equal(validScalar(ty,back!),true);}
+ for(const ty of types)for(const text of ['16#FFFF','16#10000','2#101','-40000','70000','4294967296','T#1S','1.5','abc'])if(ty!=='BOOL'){const v=parseValue(text,ty);if(v!==undefined)assert.equal(validScalar(ty,v),true,`${ty} ${text} -> ${v} must be accepted by the runtime`);}
 });
 
 // ---- worker 'write' action ----
@@ -105,8 +120,8 @@ test("Worker 'write': no program, unknown tag, null/undefined value and missing 
  w.send({action:'write',tag:'FLAG',value:true});assert.equal(w.last().error,undefined,'no program loaded: ignored');assert.equal(w.last().mode,'STOP');assert.equal(w.last().snapshot,undefined);
  w.send({action:'load',program:program(),plant:'motor',lang:'en'});
  w.send({action:'write',tag:'FLAG',value:null});w.send({action:'write',tag:'FLAG'});w.send({action:'write',value:true});assert.equal(w.last().error,undefined);assert.equal(w.last().mode,'STOP');assert.equal(w.last().snapshot?.values.FLAG,false);
- w.send({action:'write',tag:'NOPE',value:true});assert.match(w.last().error??'',/NOPE/);assert.equal(w.last().mode,'ERROR');
- w.send({action:'load',program:program(),plant:'motor',lang:'en'});assert.equal(w.last().mode,'STOP');assert.equal(w.last().error,undefined,'load recovers from ERROR');
+ w.send({action:'write',tag:'NOPE',value:true});assert.match(w.last().error??'',/NOPE/);assert.equal(w.last().mode,'STOP','unknown tag is reported without ERROR mode');
+ w.send({action:'load',program:program(),plant:'motor',lang:'en'});assert.equal(w.last().error,undefined);
 });
 test("Worker 'write': error text follows the language",async()=>{
  const w=await startWorker();
@@ -116,12 +131,19 @@ test("Worker 'write': error text follows the language",async()=>{
  w.send({action:'write',tag:'NOPE',value:true});assert.notEqual(w.last().error,tr);
  w.send({action:'load',program:program(),plant:'motor',lang:'en'});
 });
-// Out-of-range modify values currently put the whole CPU into ERROR (UI calls send({action:'write'}) without a range check).
-test("Worker 'write': an out-of-range value is rejected without stopping the CPU",{todo:'BUG: write 40000 to an INT tag sets mode ERROR and stops the runtime'},async()=>{
+test("Worker 'write'/'input': a rejected value (range, unknown tag, output) is reported without ERROR mode, stopping the CPU or changing the value; message has no \"Error:\" prefix",async()=>{
  const w=await startWorker();
- w.send({action:'load',program:program(),plant:'motor',lang:'en'});w.send({action:'run'});
- w.send({action:'write',tag:'CNT',value:40000});
- assert.equal(w.last().mode,'RUN','CPU keeps running after a rejected modify value');
+ w.send({action:'load',program:program(),plant:'motor',lang:'en'});w.send({action:'run'});w.tick();
+ w.send({action:'write',tag:'CNT',value:123});
+ for(const [action,tag,value] of [['write','CNT',40000],['write','CNT',-32769],['write','B',256],['write','FLAG',5],['write','NOPE',1],['input','IW',40000],['input','MOTOR',true],['input','NOPE',true]] as const){
+  w.send({action,tag,value});
+  assert.equal(w.last().mode,'RUN',`${action} ${tag}=${value}: CPU keeps running`);assert.ok(w.last().error,`${action} ${tag}=${value}: error reported`);assert.doesNotMatch(w.last().error!,/^Error:/);
+  assert.equal(w.last().snapshot?.values.CNT,123,'other values untouched');
+ }
+ assert.match((w.send({action:'write',tag:'CNT',value:40000}),w.last().error!),/CNT/);
+ w.tick();assert.equal(w.last().mode,'RUN');assert.equal(w.last().error,undefined,'next scan carries no stale error');assert.ok(w.last().snapshot!.scans>1,'scanning continues');
+ w.send({action:'write',tag:'CNT',value:-32768});assert.equal(w.last().error,undefined);assert.equal(w.last().snapshot?.values.CNT,-32768,'a valid value still works afterwards');
+ w.send({action:'load',program:program(),plant:'motor',lang:'tr'});w.send({action:'write',tag:'CNT',value:40000});assert.equal(w.last().mode,'STOP');assert.doesNotMatch(w.last().error??'',/^Error:/);assert.ok(w.last().error);
  w.send({action:'load',program:program(),plant:'motor',lang:'en'});
 });
 test("Worker 'force': forced input is seen by the program and survives writes; forces=null clears",async()=>{
@@ -215,7 +237,7 @@ test('WatchTable SSR: monitoring shows the value in the chosen display format an
   clean(lang,html,'WatchTable/monitor');
  }
 });
-test('ForceTable SSR: columns, :P addresses, F flag on forced rows, Stop forcing enabled only with forces; input-only datalist',()=>{
+test('ForceTable SSR: columns, :P addresses, F flag on forced rows, Stop forcing enabled only with forces; datalist',()=>{
  for(const lang of LANGS){
   const html=forceTable(lang),active=forceTable(lang,{forces:{START:true},monitoring:true});
   has(lang,html,'col.name','col.address','col.format','col.monitor','col.force','tool.startForce','tool.stopForce','tool.monitorAll','tool.delete','addNew','msg.monitorOffline');
@@ -224,7 +246,7 @@ test('ForceTable SSR: columns, :P addresses, F flag on forced rows, Stop forcing
   assert.match(active,/<tr class=" forced"[^>]*><td><b class="tia-forced-flag" title="F">F<\/b>/);assert.doesNotMatch(active,new RegExp(`disabled=""[^>]*aria-label="${tablesDict[lang]['tool.stopForce']}"|aria-label="${tablesDict[lang]['tool.stopForce']}"[^>]*disabled=""`));
   assert.equal([...active.matchAll(/tia-forced-flag/g)].length,1,'only the forced row is flagged');
   assert.match(active,/tia-monitor true"><i><\/i>TRUE/);
-  assert.ok(html.includes('<option value="START">')&&html.includes('<option value="MOTOR">')&&!html.includes('<option value="Count">'),'only I/Q tags are offered');
+  assert.ok(tags.every(x=>html.includes(`<option value="${x.name}">`)),'every tag is offered; non-I/O tags are refused with msg.forceIo when added');
   clean(lang,html,'ForceTable');clean(lang,active,'ForceTable/forcing');
  }
 });
