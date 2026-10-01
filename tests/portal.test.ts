@@ -9,7 +9,7 @@ import {material} from '../src/challenges/private';
 
 type Props=Parameters<typeof PortalView>[0];
 type El=ReactElement<Record<string,unknown>>;
-const make=(over:Partial<Props>={}):Props=>({projectName:'PLC_Lab_Project',cpu:'CPU 1214C DC/DC/DC',blocks:material(7).reference.blocks,challenge:challenge(7),mode:'STOP',locked:false,saved:true,onOpen:()=>{},onCreate:()=>{},onCpu:()=>{},onStart:()=>{},onStop:()=>{},...over});
+const make=(over:Partial<Props>={}):Props=>({visible:true,dirty:false,message:'',projectName:'PLC_Lab_Project',cpu:'CPU 1214C DC/DC/DC',blocks:material(7).reference.blocks,challenge:challenge(7),mode:'STOP',locked:false,saved:true,onOpen:()=>{},onCreate:()=>{},onCpu:()=>{},onStart:()=>{},onStop:()=>{},...over});
 const markup=(p:Props)=>renderToStaticMarkup(createElement(PortalView,p));
 // Minimal hook-driven renderer: PortalView only uses useState, so the element tree can be produced without a DOM and clicked by invoking its handlers.
 const internals=(React as unknown as {__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE:{H:unknown}}).__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
@@ -125,4 +125,43 @@ test('Online & Diagnostics: operating mode, Start/Stop enablement and Go online'
  const run=mount(make({mode:'RUN',onStart:()=>calls.push('start'),onStop:()=>calls.push('stop')}));run.click('button','Online & Diagnostics');
  assert.match(run.html(),/<td class="portal-run">● RUN<\/td>/);assert.match(run.html(),/<button disabled="">Start CPU<\/button>/);assert.doesNotMatch(run.html(),/disabled="">Stop CPU/);
  run.click('button','Stop CPU');assert.deepEqual(calls,['start','stop']);
+});
+test('Portal view is hidden through the hidden attribute but stays rendered',()=>{
+ assert.match(markup(make({visible:false})),/<div class="portal" hidden="" role="application" aria-label="Portal view">/);
+ assert.doesNotMatch(markup(make()),/hidden=""/);assert.ok(markup(make({visible:false})).includes('Opened project: PLC_Lab_Project'));
+});
+test('Dirty program: Create and double-click ask for confirmation, Create anyway commits, Cancel clears',()=>{
+ const created:number[]=[];const v=mount(make({dirty:true,onCreate:id=>created.push(id)}));v.click('button','Create new project');
+ assert.doesNotMatch(v.html(),/alertdialog/);
+ v.click('button','Create');assert.deepEqual(created,[]);
+ assert.match(v.html(),/<div class="portal-buttons portal-confirm" role="alertdialog" aria-label="Replace current program">/);assert.match(v.html(),/exercise 07 with an empty Main \[OB1\]/);
+ assert.doesNotMatch(v.html(),/disabled="">Create/);assert.ok(!v.all().some(e=>e.type==='button'&&v.text(e)==='Create'),'plain Create replaced by the confirm bar');
+ v.click('button','Cancel');assert.deepEqual(created,[]);assert.doesNotMatch(v.html(),/alertdialog/);
+ v.fire(v.all().find(e=>e.type==='tr'&&v.text(e).startsWith('12'))!,'onDoubleClick');assert.deepEqual(created,[]);assert.match(v.html(),/exercise 12 with an empty Main/);
+ v.fire(v.all().find(e=>e.type==='tr'&&v.text(e).startsWith('05'))!,'onClick');assert.doesNotMatch(v.html(),/alertdialog/,'selecting another row dismisses the confirm bar');
+ v.click('button','Create');v.click('button','Create anyway');assert.deepEqual(created,[5]);assert.doesNotMatch(v.html(),/alertdialog/);
+});
+test('Clean program: Create and double-click call onCreate immediately; locked + dirty does nothing',()=>{
+ const created:number[]=[];let v=mount(make({dirty:false,onCreate:id=>created.push(id)}));v.click('button','Create new project');
+ v.click('button','Create');v.fire(v.all().find(e=>e.type==='tr'&&v.text(e).startsWith('09'))!,'onDoubleClick');assert.deepEqual(created,[7,9]);assert.doesNotMatch(v.html(),/alertdialog/);
+ v=mount(make({dirty:true,locked:true,onCreate:id=>created.push(id)}));v.click('button','Create new project');
+ v.fire(v.all().find(e=>e.type==='tr'&&v.text(e).startsWith('09'))!,'onDoubleClick');assert.doesNotMatch(v.html(),/alertdialog/);assert.deepEqual(created,[7,9]);
+});
+test('Accessible devices shows the CPU message (e.g. compile errors) as a status note',()=>{
+ const text='4 derleme hatası var. Diagnostics bölümünü incele.';
+ const v=mount(make({message:text}));v.click('button','Online & Diagnostics');
+ assert.match(v.html(),new RegExp(`<p class="portal-note" role="status">${text}</p>`));
+ const other=mount(make({message:text}));other.click('button','Devices & networks');assert.doesNotMatch(other.html(),/portal-note/);
+ const empty=mount(make());empty.click('button','Online & Diagnostics');assert.doesNotMatch(empty.html(),/portal-note/);
+});
+test('Each portal remembers its last action; Create and Change device reset to the current project',()=>{
+ const v=mount(make());const active=()=>v.all().filter(e=>e.type==='button'&&e.props['aria-pressed']===true).map(e=>v.text(e));
+ v.click('button','Devices & networks');v.click('button','Change device');
+ v.click('button','Start');assert.deepEqual(active(),['Start','First steps']);
+ v.click('button','Devices & networks');assert.deepEqual(active(),['Devices & networks','Change device'],'Change device remembered');
+ v.click('button','Start');v.click('button','Create new project');v.fire(v.all().find(e=>e.type==='tr'&&v.text(e).startsWith('12'))!,'onClick');
+ v.click('button','First steps');v.click('button','Create new project');assert.match(v.html(),/<tr class="selected"><td>07<\/td>/,'Create selection resets to the current exercise');
+ v.click('button','Devices & networks');v.fire(v.all().filter(e=>e.type==='input')[3],'onChange');assert.doesNotMatch(v.html(),/disabled="">Change/);
+ v.click('button','Show all devices');v.click('button','Change device');assert.match(v.html(),/disabled="">Change/,'radio resets to the current CPU');
+ v.click('button','Online & Diagnostics');v.click('button','Start');v.click('button','Online & Diagnostics');assert.deepEqual(active().slice(-1),['Accessible devices']);
 });
