@@ -2,6 +2,10 @@ import './industrial.test';
 import './connections.test';
 import './status.test';
 import './portal.test';
+import './i18n-plc.test';
+import './i18n-server.test';
+import './i18n.test';
+import './i18n-content.test';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {material} from '../src/challenges/private';
@@ -83,7 +87,8 @@ test('Input behavior metadata preserves simulation semantics and round trips thr
 });
 test('Motor exercise starts with physical pushbuttons and staged conceptual hints',()=>{
  const c=challenge(3);assert.equal(c.tags.find(t=>t.name==='START')?.inputMode,'momentary');assert.equal(c.tags.find(t=>t.name==='OVERLOAD')?.inputMode,'toggle');
- assert.ok(!c.hints[1].includes('kendi NO kontağını'));assert.ok(c.hints[1].includes('Paralel'));
+ assert.ok(c.hints[1].includes('Parallel'),'English is the default language');
+ for(const [lang,giveaway,word] of [['en','its own NO contact','Parallel'],['tr','kendi NO kontağını','Paralel']] as const){const hints=challenge(3,0,lang).hints;assert.ok(!hints[1].includes(giveaway),lang);assert.ok(hints[1].includes(word),lang);}
 });
 import {LAD_MIN_RUNG_CELLS} from '../src/ladder/geometry';
 test('Empty and short rungs span nine grid cells without stretching instruction cells',()=>{

@@ -1,0 +1,242 @@
+/* TIA Portal V20 project view. Metrics measured from V20 screenshots at 1920 px width; all colors are tokens so the
+   look can be calibrated against reference screenshots in one place. */
+.tia-shell{
+ --tia-font:12px 'Segoe UI',Tahoma,Arial,sans-serif;
+ --tia-bg:#f0f0f0;--tia-panel:#ffffff;--tia-line:#c9c9c9;--tia-line-dark:#a9a9a9;--tia-text:#1e1e1e;--tia-muted:#6d6d6d;
+ --tia-menu-h:22px;--tia-toolbar-h:27px;--tia-title-h:23px;--tia-row-h:19px;--tia-editorbar-h:30px;
+ --tia-title:#6f7b87;--tia-title-active:#3e4c59;--tia-title-text:#ffffff;--tia-online:#e8862a;
+ --tia-section:#e6e6e6;--tia-section-text:#1e1e1e;--tia-select:#cde3f7;--tia-select-line:#7aa7d2;--tia-hover:#e5f1fb;
+ --tia-strip:#5a5f66;--tia-strip-text:#e9e9e9;--tia-editorbar:#262626;--tia-editorbar-text:#f2f2f2;
+ --tia-network-head:#e1e1e1;--tia-teal:#1f9a9a;
+ position:fixed;inset:0;display:grid;grid-template-rows:calc(var(--tia-menu-h) + var(--tia-toolbar-h) + 2px) minmax(0,1fr) var(--tia-editorbar-h);
+ background:var(--tia-bg);color:var(--tia-text);font:var(--tia-font);overflow:hidden;
+}
+.tia-shell button{font:inherit;color:inherit;border-radius:0}
+.tia-shell button:hover{background:transparent}
+.tia-icon{display:inline-block;flex:none;vertical-align:-3px}
+
+/* Top: menu bar + toolbar, wordmark on the right across both rows */
+.tia-top{display:flex;justify-content:space-between;background:linear-gradient(#f9f9f9,#ececec);border-bottom:1px solid var(--tia-line-dark);min-width:0}
+.tia-top-rows{display:flex;flex-direction:column;min-width:0;flex:1}
+.tia-top .classic-menubar{height:var(--tia-menu-h);padding-left:4px}
+.tia-top .classic-menubar>button{height:20px;padding:0 7px;border:1px solid transparent;background:transparent;font-size:12px;color:#3c3c3c}
+.tia-top .classic-menubar>button:hover,.tia-top .classic-menubar>button[data-popup-open]{background:#e5f1fb;border-color:#9cc3e5}
+.tia-toolbar{display:flex;align-items:center;gap:1px;height:var(--tia-toolbar-h);padding:0 4px;min-width:0;overflow:hidden}
+.tia-toolbar>i{width:1px;height:18px;background:#c5c5c5;margin:0 4px;flex:none}
+.tia-shell .tia-tool{display:inline-flex;align-items:center;gap:4px;height:23px;min-width:23px;padding:0 3px;border:1px solid transparent;background:transparent;justify-content:center;flex:none}
+.tia-shell .tia-tool.with-text{padding:0 5px}
+.tia-shell .tia-tool:hover:not(:disabled){background:#e5f1fb;border-color:#9cc3e5}
+.tia-shell .tia-tool.pressed{background:#cde3f7;border-color:#7aa7d2}
+.tia-shell .tia-tool:disabled{opacity:.42}
+.tia-search{display:flex;align-items:center;margin-left:6px;flex:0 1 190px;min-width:90px}
+.tia-search input{width:100%;height:19px;border:1px solid #a9b4be;padding:0 4px;font:11px 'Segoe UI',Tahoma,sans-serif;color:#333;background:#fff;border-radius:0}
+.tia-search input::placeholder{color:#8a8a8a}
+.tia-wordmark{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;padding:0 14px 0 20px;line-height:1.05;white-space:nowrap;flex:none}
+.tia-wordmark span{font-size:15px;color:#1e1e1e}
+.tia-wordmark b{font-size:19px;font-weight:600;color:#7a7a7a;letter-spacing:.5px}
+
+/* Body: left strip | workspace grid | task-card tabs */
+.tia-body{display:grid;grid-template-columns:20px minmax(0,1fr) 22px;min-height:0}
+.tia-left-strip{position:relative;background:linear-gradient(var(--tia-strip) 0 260px,#d9d9d9 260px);display:flex;flex-direction:column;align-items:center}
+.tia-strip-label{writing-mode:vertical-rl;transform:rotate(180deg);color:var(--tia-strip-text);font-weight:600;font-size:12px;margin-top:12px;height:236px;text-align:right;white-space:nowrap;overflow:hidden}
+.tia-shell .tia-vtab{writing-mode:vertical-rl;transform:rotate(180deg);background:#e9e9e9;border:1px solid var(--tia-line-dark);padding:8px 1px;font-size:12px;width:20px}
+.tia-workspace.resizable-workspace{display:grid;position:relative;min-height:0;min-width:0;background:var(--tia-line-dark);gap:0 3px;
+ grid-template-columns:var(--panel-left) minmax(0,1fr) var(--panel-right);grid-template-rows:minmax(0,1fr) var(--panel-bottom)}
+.tia-workspace.tree-collapsed{grid-template-columns:0 minmax(0,1fr) var(--panel-right)}
+.tia-workspace.cards-collapsed{grid-template-columns:var(--panel-left) minmax(0,1fr) 0}
+.tia-workspace.tree-collapsed.cards-collapsed{grid-template-columns:0 minmax(0,1fr) 0}
+.tia-workspace.inspector-collapsed{grid-template-rows:minmax(0,1fr) calc(var(--tia-title-h) + 2px)}
+.tia-workspace.tree-collapsed>.splitter-left,.tia-workspace.cards-collapsed>.splitter-right,.tia-workspace.inspector-collapsed>.splitter-bottom{display:none}
+.tia-workspace.tree-collapsed>.splitter-bottom{left:0}.tia-workspace.cards-collapsed>.splitter-bottom{right:0}
+.tia-workspace>.tia-tree-pane{grid-column:1;grid-row:1/3}
+.tia-workspace>.tia-workarea{grid-column:2;grid-row:1}
+.tia-workspace>.tia-cards{grid-column:3;grid-row:1/3}
+.tia-workspace>.tia-inspector{grid-column:2;grid-row:2}
+.tia-workspace.workarea-maximized{grid-template-columns:0 minmax(0,1fr) 0;grid-template-rows:minmax(0,1fr) 0}
+.tia-workspace.workarea-maximized>.tia-tree-pane,.tia-workspace.workarea-maximized>.tia-cards,.tia-workspace.workarea-maximized>.tia-inspector,.tia-workspace.workarea-maximized>.panel-splitter{display:none}
+
+/* Panes and title bars (orange while online, as in TIA) */
+.tia-pane{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--tia-bg);overflow:hidden}
+.tia-pane-title{display:flex;align-items:center;justify-content:space-between;gap:6px;height:var(--tia-title-h);min-height:var(--tia-title-h);padding:0 4px 0 7px;background:var(--tia-title);color:var(--tia-title-text);font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden}
+.tia-editor-title{background:var(--tia-title-active)}
+.tia-shell.online .tia-pane-title{background:var(--tia-online)}
+.tia-shell .tia-pane-btn{border:0;background:transparent;color:var(--tia-title-text);padding:0 4px;height:19px;font-size:11px}
+.tia-shell .tia-pane-btn:hover{background:rgba(255,255,255,.18)}
+.tia-tabs{display:flex;gap:2px;padding:5px 6px 0;border-bottom:1px solid var(--tia-line-dark);background:var(--tia-bg)}
+.tia-shell .tia-tabs button{height:22px;padding:0 14px;border:1px solid var(--tia-line-dark);border-bottom:0;background:#dedede;font-size:13px;margin-bottom:-1px}
+.tia-shell .tia-tabs button.active{background:var(--tia-panel);font-weight:600}
+
+/* Project tree */
+.tia-tree-tools{display:flex;justify-content:flex-end;gap:2px;padding:3px 6px;border-bottom:1px solid var(--tia-line);background:var(--tia-panel)}
+.tia-shell .tia-tree-tools button{border:1px solid transparent;background:transparent;padding:2px;height:22px}
+.tia-shell .tia-tree-tools button:hover{border-color:#9cc3e5;background:#e5f1fb}
+.tia-tree{list-style:none;margin:0;padding:2px 0;background:var(--tia-panel);flex:1;overflow:auto;min-height:0}
+.tia-tree ul{list-style:none;margin:0;padding:0}
+.tia-tree-row{display:flex;align-items:center;gap:4px;height:var(--tia-row-h);padding-right:6px;white-space:nowrap;cursor:default;border:1px dotted transparent;user-select:none}
+.tia-tree-row:hover{background:var(--tia-hover)}
+.tia-tree-row.selected{background:var(--tia-select);border-color:var(--tia-select-line)}
+.tia-tree-row.active .tia-tree-label{font-weight:600}
+.tia-tree-row:focus-visible{outline:1px solid var(--tia-select-line);outline-offset:-1px}
+.tia-tree-toggle{display:inline-block;width:12px;text-align:center;color:#3c3c3c;font-size:10px;flex:none;cursor:pointer}
+.tia-tree-label{overflow:hidden;text-overflow:ellipsis}
+.tia-tree-status{margin-left:auto;color:#2e9b48;font-size:10px}
+.tia-tree-empty{height:var(--tia-row-h);line-height:var(--tia-row-h);color:var(--tia-muted);font-style:italic;font-size:11px}
+.tia-tree-placeholder{padding:10px;color:var(--tia-muted);background:var(--tia-panel);flex:1;margin:0}
+.tia-details{display:flex;flex-direction:column;border-top:1px solid var(--tia-line-dark);background:var(--tia-panel);min-height:24px}
+.tia-details.open{height:32%;min-height:120px}
+.tia-shell .tia-details-head{display:flex;align-items:center;gap:6px;height:22px;padding:0 6px;border:0;border-bottom:1px solid var(--tia-line);background:var(--tia-section);font-weight:600;font-size:13px;justify-content:flex-start}
+.tia-details-tab{padding:4px 8px 2px;font-weight:600;border-bottom:1px solid var(--tia-line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tia-details .tia-grid{flex:none}
+.tia-details{overflow:auto}
+
+/* Generic grid (details view, interface, log, overview) */
+.tia-grid{width:100%;border-collapse:collapse;background:var(--tia-panel);font-size:12px}
+.tia-grid th{position:sticky;top:0;background:linear-gradient(#fbfbfb,#ececec);font-weight:400;text-align:left;padding:2px 6px;border-right:1px solid var(--tia-line);border-bottom:1px solid var(--tia-line-dark);white-space:nowrap}
+.tia-grid td{padding:1px 6px;height:20px;border-bottom:1px solid #ececec;border-right:1px solid #f1f1f1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:360px}
+.tia-grid tbody tr:hover td{background:var(--tia-hover)}
+.tia-grid tr.section td{font-weight:600;background:#f6f6f6}
+.tia-grid tr.add td{color:#8a8a8a;font-style:italic}
+
+/* Work area: editor title bar, editor toolbar, block interface strip, favorites, content, zoom */
+.tia-workarea{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--tia-panel);position:relative}
+.tia-crumbs{display:flex;align-items:center;gap:7px;overflow:hidden;white-space:nowrap}
+.tia-crumbs span{display:inline-flex;gap:7px;align-items:center}
+.tia-crumbs b{font-size:10px;font-weight:400;opacity:.85}
+.tia-window-btns{display:flex;gap:1px;flex:none}
+.tia-shell .tia-window-btns button{border:0;background:transparent;color:#fff;width:20px;height:19px;padding:0}
+.tia-shell .tia-window-btns button:hover:not(:disabled){background:rgba(255,255,255,.2)}
+.tia-shell .tia-window-btns button:disabled{opacity:.4}
+.tia-workarea-body{position:relative;display:flex;flex-direction:column;flex:1;min-height:0;overflow:auto}
+.tia-workarea-body.view-ladder{overflow:hidden}
+.tia-editor-toolbar{display:flex;align-items:center;gap:1px;height:28px;min-height:28px;padding:0 5px;background:linear-gradient(#fbfbfb,#efefef);border-bottom:1px solid var(--tia-line)}
+.tia-editor-toolbar>i{width:1px;height:18px;background:#c5c5c5;margin:0 4px}
+.tia-shell .tia-editor-toolbar button{border:1px solid transparent;background:transparent;width:24px;height:23px;padding:0;justify-content:center}
+.tia-shell .tia-editor-toolbar button:hover:not(:disabled){background:#e5f1fb;border-color:#9cc3e5}
+.tia-shell .tia-editor-toolbar button.pressed{background:#fde7d0;border-color:#e8862a}
+.tia-grow{flex:1}
+.tia-shell .tia-iface-strip{position:relative;height:17px;min-height:17px;border:0;border-bottom:1px solid var(--tia-line-dark);background:linear-gradient(#c4c4c4,#b1b1b1);color:#fff;font-size:12px;text-shadow:0 0 1px #777;justify-content:center;padding:0}
+.tia-shell .tia-iface-strip span{position:absolute;right:50%;bottom:-2px;transform:translateX(160%);font-size:9px;color:#555;text-shadow:none}
+.tia-iface{max-height:180px;overflow:auto;border-bottom:1px solid var(--tia-line-dark)}
+.tia-editor-scroll{flex:1;min-height:0;overflow:auto;background:var(--tia-panel)}
+.tia-zoom{position:absolute;right:16px;bottom:4px;display:flex;align-items:center;gap:6px;background:var(--tia-bg);border:1px solid var(--tia-line);padding:1px 4px;z-index:5}
+.tia-zoom select,.tia-zoom button{height:19px;font-size:11px}
+.tia-zoom input[type=range]{width:80px;height:12px}
+.tia-overview{padding:0}
+.tia-overview .tia-muted{padding:6px 8px}
+
+/* Inspector window */
+.tia-inspector{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--tia-panel);overflow:hidden}
+.tia-inspector-head{padding-right:2px}
+.tia-inspector-title{overflow:hidden;text-overflow:ellipsis}
+.tia-inspector-tabs{display:flex;gap:2px;margin-left:auto;height:100%;align-items:flex-end}
+.tia-shell .tia-inspector-tabs button{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 10px;border:1px solid rgba(255,255,255,.35);border-bottom:0;background:rgba(255,255,255,.14);color:#fff;font-weight:400;font-size:13px}
+.tia-shell .tia-inspector-tabs button.active{background:#f0f0f0;color:#1e1e1e;border-color:#f0f0f0}
+.tia-badge{font-style:normal;background:#f6c343;color:#3a2a00;border-radius:7px;padding:0 5px;font-size:10px;font-weight:700}
+.tia-subtabs{display:flex;gap:2px;padding:4px 6px 0;background:var(--tia-bg);border-bottom:1px solid var(--tia-line-dark);flex:none}
+.tia-shell .tia-subtabs button{height:22px;padding:0 14px;border:1px solid var(--tia-line-dark);border-bottom:0;background:#dedede;font-size:13px;margin-bottom:-1px}
+.tia-shell .tia-subtabs button.active{background:var(--tia-panel);font-weight:600}
+.tia-inspector-body{flex:1;min-height:0;overflow:auto;background:var(--tia-panel)}
+.tia-inspector-pane{min-height:100%}
+.tia-inspector-pane[hidden]{display:none}
+.tia-inspector.collapsed .tia-subtabs,.tia-inspector.collapsed .tia-inspector-body{display:none}
+.properties-host:not(:empty)+.tia-props,.properties-host:not(:empty)+.tia-muted{display:none}
+.tia-props{display:grid;grid-template-columns:190px minmax(0,1fr);min-height:100%}
+.tia-props-nav{display:flex;flex-direction:column;border-right:1px solid var(--tia-line);padding:4px 0;background:var(--tia-panel)}
+.tia-shell .tia-props-nav button{border:0;background:transparent;text-align:left;justify-content:flex-start;height:19px;padding:0 8px;font-size:12px}
+.tia-shell .tia-props-nav button.active{background:var(--tia-select);outline:1px dotted var(--tia-select-line)}
+.tia-shell .tia-props-nav button:disabled{opacity:1;color:var(--tia-text);cursor:default}
+.tia-props-form{padding:6px 18px;background:#f5f5f5}
+.tia-props-form h4{margin:0 0 10px;font-size:13px;font-weight:600;border-bottom:1px solid var(--tia-line);padding-bottom:3px}
+.tia-props-form label{display:grid;grid-template-columns:110px minmax(0,560px);align-items:center;gap:8px;margin:4px 0}
+.tia-props-form label span{text-align:right}
+.tia-props-form input{height:19px;border:1px solid #a9b4be;padding:0 4px;background:#fff;font:12px 'Segoe UI',Tahoma,sans-serif;border-radius:0}
+.tia-muted{color:var(--tia-muted);padding:6px 8px;margin:0}
+.tia-log td:first-child{width:22px}
+.tia-compile{padding:4px 8px}
+.tia-compile p{display:flex;align-items:center;gap:6px;margin:2px 0 6px}
+.tia-compile p.ok{color:#1f7a37}.tia-compile p.error{color:#b42318}
+
+/* Task cards and their vertical tabs */
+.tia-cards{background:var(--tia-panel)}
+.tia-card-body{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column}
+.tia-card-section{display:flex;flex-direction:column;border-bottom:1px solid var(--tia-line-dark)}
+.tia-card-section.grow.open{flex:1;min-height:180px}
+.tia-shell .tia-card-section-head{display:flex;align-items:center;gap:8px;height:22px;min-height:22px;padding:0 6px;border:0;border-top:1px solid #fff;background:var(--tia-section);color:var(--tia-section-text);font-weight:600;font-size:13px;justify-content:flex-start;text-align:left}
+.tia-card-section-head span{width:10px;font-weight:400}
+.tia-card-section-body{overflow:auto;min-height:0;flex:1}
+.tia-card-options{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 6px;border-bottom:1px solid var(--tia-line)}
+.tia-instr-search{display:flex;align-items:center;gap:4px;flex:1;max-width:220px;border:1px solid #a9b4be;background:#fff;padding:0 4px;height:20px}
+.tia-instr-search input{border:0;outline:0;flex:1;min-width:0;font:12px 'Segoe UI',Tahoma,sans-serif;padding:0;background:transparent}
+.tia-instr-head,.tia-shell .tia-instr-row{display:grid;grid-template-columns:minmax(120px,1.2fr) minmax(90px,1.4fr) 52px;align-items:center}
+.tia-instr-head{height:19px;padding:0 6px;font-size:11px;color:#444;background:linear-gradient(#fbfbfb,#ececec);border-bottom:1px solid var(--tia-line)}
+.tia-shell .tia-instr-row{width:100%;height:var(--tia-row-h);border:0;border-bottom:1px solid transparent;background:transparent;padding-right:6px;text-align:left;justify-content:stretch;font-size:12px}
+.tia-shell .tia-instr-row:hover:not(:disabled){background:var(--tia-hover)}
+.tia-shell .tia-instr-row:disabled{opacity:.5}
+.tia-instr-row>span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.tia-instr-row>span:nth-child(2),.tia-instr-row>span:nth-child(3){color:#555;font-size:11px}
+.tia-instr-name{display:flex;align-items:center;gap:4px}
+.tia-instr-icon{display:inline-flex;width:30px;height:14px;align-items:center;justify-content:center;overflow:hidden}
+.tia-instr-icon svg{max-height:14px;max-width:30px}
+.tia-card-empty{margin:0;padding:6px 10px;color:var(--tia-muted);font-size:11px}
+.tia-card-empty.indent{padding-left:44px}
+.tia-card-hint{margin:6px 8px;color:var(--tia-muted);font-size:11px}
+.tia-shell .tia-link{border:0;background:none;padding:0;color:#1f6fb5;text-decoration:underline;font-size:11px}
+.tia-vtabs{display:flex;flex-direction:column;gap:3px;padding-top:4px;background:var(--tia-bg);border-left:1px solid var(--tia-line-dark)}
+.tia-shell .tia-vtabs button{display:flex;flex-direction:column;align-items:center;gap:4px;width:21px;padding:6px 0;border:1px solid var(--tia-line-dark);border-right:0;background:#e2e2e2;font-size:12px;color:#333}
+.tia-vtabs button span{writing-mode:vertical-rl;white-space:nowrap}
+.tia-shell .tia-vtabs button.active{background:var(--tia-panel);font-weight:600;border-left:3px solid var(--tia-title-active)}
+.tia-shell .tia-vtabs button:hover{background:#eef5fb}
+
+/* Testing card: CPU operator panel */
+.tia-cpu-panel{padding:8px}
+.tia-cpu-head{display:flex;justify-content:space-between;margin-bottom:6px}
+.tia-cpu-head strong.run{color:#1f8a3a}.tia-cpu-head strong.stop{color:#b8860b}
+.tia-cpu-body{display:flex;gap:16px;align-items:flex-start;border:1px solid var(--tia-line);background:#f7f7f7;padding:8px}
+.tia-leds{list-style:none;margin:0;padding:0;display:grid;gap:5px;font-size:11px}
+.tia-leds li{display:flex;align-items:center;gap:6px}
+.led{display:inline-block;width:12px;height:7px;border:1px solid #6d6d6d;border-radius:1px}
+.led.green{background:#36c25a;box-shadow:0 0 4px #36c25a}.led.yellow{background:#f2b705;box-shadow:0 0 4px #f2b705}.led.red{background:#e53935;box-shadow:0 0 4px #e53935}.led.off{background:#cfd3d6}
+.tia-cpu-buttons{display:grid;gap:4px}
+.tia-shell .tia-cpu-buttons button{width:64px;height:22px;border:1px solid #8c8c8c;background:linear-gradient(#fdfdfd,#e1e1e1);font-weight:600;font-size:11px;justify-content:center}
+.tia-shell .tia-cpu-buttons button.pressed{background:linear-gradient(#d9d9d9,#efefef);box-shadow:inset 0 1px 2px rgba(0,0,0,.25)}
+.tia-scan-control{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px}
+.tia-shell .tia-scan-control button,.tia-shell .tia-task-actions button{height:22px;padding:0 8px;border:1px solid #a0a0a0;background:linear-gradient(#fdfdfd,#e8e8e8);font-size:12px;gap:4px}
+.tia-shell .tia-task-actions button.primary{border-color:#3e4c59;background:linear-gradient(#5d6c7a,#3e4c59);color:#fff}
+.tia-tasks{padding:8px;display:flex;flex-direction:column;gap:8px}
+.tia-task-actions{display:flex;flex-wrap:wrap;gap:5px}
+.tia-tasks .challenge-io>div{display:grid;grid-template-columns:62px 1fr;gap:2px 8px;padding:2px 8px}
+.tia-tasks .challenge-io small{grid-column:2;color:var(--tia-muted);font-size:10px}
+
+/* Bottom editor bar */
+.tia-editorbar{display:flex;align-items:center;gap:6px;padding:0 8px 0 14px;background:var(--tia-editorbar);color:var(--tia-editorbar-text);min-width:0}
+.tia-shell .tia-portal-switch{display:inline-flex;align-items:center;gap:10px;border:0;background:transparent;color:#fff;font-size:15px;padding:0 18px 0 4px;height:26px;flex:none;justify-content:flex-start}
+.tia-portal-switch span{font-size:11px}
+.tia-shell .tia-portal-switch:hover{background:rgba(255,255,255,.08)}
+.tia-editor-tabs{display:flex;gap:3px;min-width:0;overflow:hidden;flex:1}
+.tia-shell .tia-editor-tab{display:inline-flex;align-items:center;gap:6px;height:22px;max-width:150px;padding:0 8px;border:1px solid #555;background:#3a3a3a;color:#e6e6e6;font-size:12px;flex:none;justify-content:flex-start}
+.tia-editor-tab span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tia-shell .tia-editor-tab.overview{margin-right:10px}
+.tia-shell .tia-editor-tab.active{background:#fff;color:#1e1e1e;border-color:#fff}
+.tia-shell .tia-editor-tab:hover:not(.active){background:#4a4a4a}
+.tia-statusline{display:flex;align-items:center;gap:6px;max-width:42%;min-width:0;color:#fff;font-size:12px}
+.tia-statusline span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tia-statusline.ok svg{color:#5ad27a}.tia-statusline.warning svg{color:#f6c343}.tia-statusline.error svg{color:#ff6b5f}
+
+/* Narrow screens: keep the TIA structure but let the work area win */
+@media (max-width:900px){.tia-wordmark,.tia-search{display:none}.tia-left-strip{display:none}.tia-body{grid-template-columns:minmax(0,1fr) 22px}}
+@media (max-width:640px){.tia-shell{--tia-editorbar-h:34px}.tia-workspace.resizable-workspace{grid-template-columns:0 minmax(0,1fr) 0;grid-template-rows:minmax(0,1fr) 40%}.tia-workspace>.tia-tree-pane,.tia-workspace>.tia-cards,.tia-workspace>.panel-splitter{display:none}.tia-statusline{display:none}.tia-toolbar{overflow-x:auto}}
+
+.tia-shell .tia-instr-row.folder .tia-instr-name{grid-column:1/-1}
+.tia-shell .properties-host{min-height:0}
+
+/* LAD editor in V20 colors: teal operand addresses, quoted black names, light-gray boxes, blue literal values */
+.tia-shell .rung-svg text{font-family:'Segoe UI',Tahoma,Arial,sans-serif;font-size:12px;fill:#1e1e1e}
+.tia-shell .rung-svg .rung-address{fill:var(--tia-teal);font-size:12px;font-weight:400}
+.tia-shell .rung-svg .rung-state{fill:#2a62d9;font-size:12px}
+.tia-shell .rung-svg .rung-block-state{fill:#8a8a8a;font-size:11px}
+.tia-shell .ladder-editor{background:#fff}
+.tia-shell .ribbon-secondary{display:none}
+.tia-shell .instruction-ribbon{padding:3px 6px;background:#f7f7f7;border-bottom:1px solid var(--tia-line)}
+.tia-shell .ribbon-group small{display:none}
+.tia-shell .block-title{background:#e9e9e9;font-size:12px}
+.tia-shell .networkhead{background:var(--tia-network-head)}

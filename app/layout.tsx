@@ -3,6 +3,7 @@ import { cookies, headers } from 'next/headers';
 import { LANG_COOKIE, parseAcceptLanguage, resolveLanguage } from '@/src/i18n/core';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
+import './tia.css';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',

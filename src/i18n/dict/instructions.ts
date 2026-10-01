@@ -1,0 +1,25 @@
+import {defineDict} from '../core';
+
+export const instructionsDict=defineDict({
+ 'options':'Options','search':'<Search>','searchLabel':'Search instructions','favorites':'Favorites','basic':'Basic instructions','extended':'Extended instructions','technology':'Technology','communication':'Communication','optional':'Optional packages',
+ 'col.name':'Name','col.description':'Description','col.version':'Version','notAvailable':'Not available in PLC Lab Web.','hint':'Select an element in the network, then click an instruction. It is inserted on the selected path.','showTask':'Show the active task',
+ 'g.general':'General','g.bit':'Bit logic operations','g.timer':'Timer operations','g.counter':'Counter operations','g.compare':'Comparator operations','g.math':'Math functions','g.move':'Move operations','g.convert':'Conversion operations','g.program':'Program control operations','g.word':'Word logic operations','g.shift':'Shift and rotate',
+ 'x.datetime':'Date and time-of-day','x.string':'String + Char','x.image':'Process image','x.dio':'Distributed I/O','x.energy':'PROFIenergy','x.module':'Module parameter assignment','x.interrupts':'Interrupts','x.alarming':'Alarming','x.diagnostics':'Diagnostics','x.pulse':'Pulse','x.recipe':'Recipe & data logging','x.dbcontrol':'Data block control','x.addressing':'Addressing',
+ 't.counting':'Counting and measurement','t.pid':'PID Control','t.motion':'Motion Control','t.timebased':'Time-based IO',
+ 'c.s7':'S7 communication','c.open':'Open user communication','c.web':'Web server','c.others':'Others','c.cp':'Communication processors',
+ 'd.NETWORK':'Insert network','d.NO':'Normally open contact','d.NC':'Normally closed contact','d.COIL':'Assignment','d.SET':'Set output','d.RESET':'Reset output','d.R_TRIG':'Scan operand for positive signal edge','d.F_TRIG':'Scan operand for negative signal edge',
+ 'd.TON':'Generate on-delay','d.TOF':'Generate off-delay','d.TP':'Generate pulse','d.CTU':'Count up','d.CTD':'Count down','d.CTUD':'Count up and down',
+ 'd.CMP ==':'Equal','d.CMP <>':'Not equal','d.CMP >=':'Greater or equal','d.CMP <=':'Less or equal','d.CMP >':'Greater than','d.CMP <':'Less than',
+ 'd.ADD':'Add','d.SUB':'Subtract','d.MUL':'Multiply','d.DIV':'Divide','d.MOVE':'Move value','d.INT_TO_REAL':'Convert Int to Real','d.REAL_TO_INT':'Convert Real to Int','d.WORD_TO_INT':'Convert Word to Int','d.NORM_X':'Normalize','d.SCALE_X':'Scale',
+},{
+ 'options':'Seçenekler','search':'<Ara>','searchLabel':'Komut ara','favorites':'Favoriler','basic':'Temel komutlar','extended':'Genişletilmiş komutlar','technology':'Teknoloji','communication':'Haberleşme','optional':'İsteğe bağlı paketler',
+ 'col.name':'Ad','col.description':'Açıklama','col.version':'Sürüm','notAvailable':'PLC Lab Web’de mevcut değil.','hint':'Network’te bir eleman seç, sonra bir komuta tıkla. Komut seçili yola eklenir.','showTask':'Aktif görevi göster',
+ 'g.general':'Genel','g.bit':'Bit mantık işlemleri','g.timer':'Zamanlayıcı işlemleri','g.counter':'Sayıcı işlemleri','g.compare':'Karşılaştırma işlemleri','g.math':'Matematik fonksiyonları','g.move':'Taşıma işlemleri','g.convert':'Dönüştürme işlemleri','g.program':'Program kontrol işlemleri','g.word':'Word mantık işlemleri','g.shift':'Kaydırma ve döndürme',
+ 'x.datetime':'Tarih ve saat','x.string':'String + Char','x.image':'Proses görüntüsü','x.dio':'Dağıtık I/O','x.energy':'PROFIenergy','x.module':'Modül parametre ataması','x.interrupts':'Kesmeler','x.alarming':'Alarmlar','x.diagnostics':'Tanılama','x.pulse':'Darbe','x.recipe':'Reçete ve veri kaydı','x.dbcontrol':'Veri bloğu kontrolü','x.addressing':'Adresleme',
+ 't.counting':'Sayma ve ölçme','t.pid':'PID kontrol','t.motion':'Hareket kontrolü','t.timebased':'Zaman tabanlı IO',
+ 'c.s7':'S7 haberleşmesi','c.open':'Açık kullanıcı haberleşmesi','c.web':'Web sunucusu','c.others':'Diğerleri','c.cp':'Haberleşme işlemcileri',
+ 'd.NETWORK':'Network ekle','d.NO':'Normalde açık kontak','d.NC':'Normalde kapalı kontak','d.COIL':'Atama','d.SET':'Çıkışı set et','d.RESET':'Çıkışı resetle','d.R_TRIG':'Operandın yükselen kenarını tara','d.F_TRIG':'Operandın düşen kenarını tara',
+ 'd.TON':'Çekme gecikmesi üret','d.TOF':'Bırakma gecikmesi üret','d.TP':'Darbe üret','d.CTU':'Yukarı say','d.CTD':'Aşağı say','d.CTUD':'Yukarı ve aşağı say',
+ 'd.CMP ==':'Eşit','d.CMP <>':'Eşit değil','d.CMP >=':'Büyük veya eşit','d.CMP <=':'Küçük veya eşit','d.CMP >':'Büyük','d.CMP <':'Küçük',
+ 'd.ADD':'Topla','d.SUB':'Çıkar','d.MUL':'Çarp','d.DIV':'Böl','d.MOVE':'Değer taşı','d.INT_TO_REAL':'Int’i Real’e dönüştür','d.REAL_TO_INT':'Real’i Int’e dönüştür','d.WORD_TO_INT':'Word’ü Int’e dönüştür','d.NORM_X':'Normalize et','d.SCALE_X':'Ölçekle',
+});

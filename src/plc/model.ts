@@ -20,6 +20,6 @@ export interface Trace {incoming?:boolean;signal?:boolean;value:boolean;detail:s
 export interface TimerState {q:boolean;et:number;start:number|null;previous:boolean}
 export interface CounterState {q:boolean;qu:boolean;qd:boolean;cv:number;previous:boolean;previousDown:boolean}
 export const uid=()=>globalThis.crypto.randomUUID();
-export const blankNetwork=(tag='MOTOR'):Network=>({id:uid(),title:'Yeni network',logic:{id:uid(),type:'AND',children:[]},output:{type:'COIL',tag,unassigned:true}});
+export const blankNetwork=(tag='MOTOR'):Network=>({id:uid(),title:'',logic:{id:uid(),type:'AND',children:[]},output:{type:'COIL',tag,unassigned:true}});
 export function walk(expr:Expr, visit:(e:Expr)=>void) {visit(expr);if('children'in expr)expr.children.forEach(e=>walk(e,visit));if('input'in expr)walk(expr.input,visit);if('down'in expr)walk(expr.down,visit);if('reset'in expr)walk(expr.reset,visit);if('load'in expr)walk(expr.load,visit);}
 export const types:DataType[]=['BOOL','BYTE','WORD','DWORD','INT','DINT','REAL','TIME'];

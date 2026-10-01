@@ -1,14 +1,24 @@
 import {Memory} from './memory';
 import {compile} from './compiler';
 import type {BranchConnection,Program,Expr,Scalar,Trace,TimerState,CounterState,Value} from './model';
+import {type Lang,type Params,langOf} from '../i18n/core';
+import {plcTranslator,type PlcKey} from '../i18n/dict/plc';
+export interface RuntimeOptions {lang?:Lang}
 export class Runtime {
  connections:BranchConnection[]=[];
- controlInput(owner:Expr,pin:"reset"|"load"|"down",expr:Expr):boolean{const c=this.connections.find(c=>c.block===owner.id&&c.pin===pin);if(!c)return this.evaluate(expr);const feed=c.source==="$rail"?true:!!this.trace[c.source]?.[c.side==="before"?"incoming":"signal"];if("children"in expr&&expr.pin&&!expr.children.length){this.trace[expr.id]={value:feed,incoming:feed,signal:feed,detail:"Branch bağlantısı = "+feed};return feed;}return this.evaluate(expr,feed)&&feed;}
+ /** Interface language of trace `detail` texts and thrown errors. Changing it never affects scan behavior or timing. */
+ private language:Lang='en';private t=plcTranslator('en');
+ // Localized trace texts are remembered as key+params so a language switch re-renders the current trace without scanning.
+ private localized:Record<string,{key:PlcKey;params:Params}>={};
+ get lang():Lang{return this.language;}
+ set lang(value:Lang){this.language=langOf(value);this.t=plcTranslator(this.language);if(this.memory)this.memory.lang=this.language;for(const [id,{key,params}] of Object.entries(this.localized)){const entry=this.trace[id];if(entry)entry.detail=this.t(key,params);}}
+ private say(id:string,key:PlcKey,params:Params){this.localized[id]={key,params};return this.t(key,params);}
+ controlInput(owner:Expr,pin:"reset"|"load"|"down",expr:Expr):boolean{const c=this.connections.find(c=>c.block===owner.id&&c.pin===pin);if(!c)return this.evaluate(expr);const feed=c.source==="$rail"?true:!!this.trace[c.source]?.[c.side==="before"?"incoming":"signal"];if("children"in expr&&expr.pin&&!expr.children.length){this.trace[expr.id]={value:feed,incoming:feed,signal:feed,detail:this.say(expr.id,"trace.branch",{value:feed})};return feed;}return this.evaluate(expr,feed)&&feed;}
  memory:Memory;inputs:Record<string,Scalar>={};forces:Record<string,Scalar>={};outputs:Record<string,Scalar>={};timers:Record<string,TimerState>={};counters:Record<string,CounterState>={};edges:Record<string,boolean>={};trace:Record<string,Trace>={};time=0;scans=0;before:Record<string,Scalar>={};
- constructor(public program:Program){const errors=compile(program).filter(d=>d.severity==='error');if(errors.length)throw Error(errors.map(e=>e.message).join('; '));this.memory=new Memory(program.tags);for(const t of program.tags)if(t.address.startsWith('%I'))this.inputs[t.name]=t.initial;}
+ constructor(public program:Program,options:RuntimeOptions={}){this.language=langOf(options.lang);this.t=plcTranslator(this.language);const errors=compile(program,this.language).filter(d=>d.severity==='error');if(errors.length)throw Error(errors.map(e=>e.message).join('; '));this.memory=new Memory(program.tags,this.language);for(const t of program.tags)if(t.address.startsWith('%I'))this.inputs[t.name]=t.initial;}
  operand(name:string):Scalar{const match=/^(.+)\.(Q|QU|QD|CV|ET)$/i.exec(name);if(match){const member=match[2].toLowerCase(),counterKey=Object.keys(this.counters).find(k=>k.toLowerCase()===match[1].toLowerCase()),timerKey=Object.keys(this.timers).find(k=>k.toLowerCase()===match[1].toLowerCase());if(counterKey&&member in this.counters[counterKey])return this.counters[counterKey][member as 'q'|'qu'|'qd'|'cv'];if(timerKey&&(member==='q'||member==='et'))return this.timers[timerKey][member];return member==='cv'||member==='et'?0:false;}return this.memory.read(name);}
- value(v:Value):number{if(v.kind==='literal')return v.value;if(v.kind==='tag')return Number(this.operand(v.tag));const a=this.value(v.a),b=this.value(v.b),c=v.c?this.value(v.c):0;switch(v.op){case'ADD':return a+b;case'SUB':return a-b;case'MUL':return a*b;case'DIV':if(!b)throw Error('DIV: sıfıra bölme');return a/b;case'INT_TO_REAL':return a;case'REAL_TO_INT':{const f=Math.floor(a),r=a-f;return r===.5?(f%2===0?f:f+1):Math.round(a);}case'WORD_TO_INT':{const w=((Math.trunc(a)%65536)+65536)%65536;return w>32767?w-65536:w;}case'NORM_X':if(c===a)throw Error('NORM_X: MIN = MAX');return(b-a)/(c-a);case'SCALE_X':return a+b*(c-a);}}
- mainInput(e:Expr,incoming:boolean):boolean{if('children'in e&&e.pin&&e.children.length===0){this.trace[e.id]={value:incoming,incoming,signal:incoming,detail:'Network bağlantısı = '+incoming};return incoming;}return this.evaluate(e,incoming)&&incoming;}
+ value(v:Value):number{if(v.kind==='literal')return v.value;if(v.kind==='tag')return Number(this.operand(v.tag));const a=this.value(v.a),b=this.value(v.b),c=v.c?this.value(v.c):0;switch(v.op){case'ADD':return a+b;case'SUB':return a-b;case'MUL':return a*b;case'DIV':if(!b)throw Error(this.t('rt.divZero'));return a/b;case'INT_TO_REAL':return a;case'REAL_TO_INT':{const f=Math.floor(a),r=a-f;return r===.5?(f%2===0?f:f+1):Math.round(a);}case'WORD_TO_INT':{const w=((Math.trunc(a)%65536)+65536)%65536;return w>32767?w-65536:w;}case'NORM_X':if(c===a)throw Error(this.t('rt.normRange'));return(b-a)/(c-a);case'SCALE_X':return a+b*(c-a);}}
+ mainInput(e:Expr,incoming:boolean):boolean{if('children'in e&&e.pin&&e.children.length===0){this.trace[e.id]={value:incoming,incoming,signal:incoming,detail:this.say(e.id,'trace.network',{value:incoming})};return incoming;}return this.evaluate(e,incoming)&&incoming;}
  evaluate(e:Expr,incoming=true):boolean{
  this.trace[e.id]={value:false,incoming,signal:false,detail:''};
  let q=false,detail='';
@@ -30,7 +40,7 @@ export class Runtime {
   }
   this.counters[key]=s;if(e.cvTag)this.memory.set(e.cvTag,s.cv);q=s.q;
  }
- else if(e.type==='R_TRIG'||e.type==='F_TRIG'){const v=this.mainInput(e.input,incoming),prev=this.edges[e.id]??false;q=e.type==='R_TRIG'?v&&!prev:!v&&prev;this.edges[e.id]=v;detail=`önce=${prev}, şimdi=${v}, Q=${q}`;}
+ else if(e.type==='R_TRIG'||e.type==='F_TRIG'){const v=this.mainInput(e.input,incoming),prev=this.edges[e.id]??false;q=e.type==='R_TRIG'?v&&!prev:!v&&prev;this.edges[e.id]=v;detail=this.say(e.id,'trace.edge',{previous:prev,now:v,q});}
  else if('pt'in e){const input=this.mainInput(e.input,incoming),pt=Math.max(0,Math.trunc(typeof e.pt==='number'?e.pt:this.value(e.pt))),key=e.instance?.trim()||e.id,s=this.timers[key]??{q:false,et:0,start:null,previous:false};
  if(e.type==='TON'){if(!input){s.start=null;s.et=0;s.q=false;}else{if(s.start===null)s.start=this.time;s.et=Math.min(pt,this.time-s.start);s.q=s.et>=pt;}}
  if(e.type==='TOF'){if(input){s.q=true;s.start=null;s.et=0;}else{if(s.previous)s.start=this.time;if(s.start!==null){s.et=Math.min(pt,this.time-s.start);s.q=s.et<pt;}else{s.q=false;s.et=0;}}}
@@ -39,7 +49,7 @@ export class Runtime {
  }
  this.trace[e.id]={value:q,incoming,signal:incoming&&q,detail};return q;
  }
- scan(deltaMs:number){if(!Number.isFinite(deltaMs)||deltaMs<=0||deltaMs>1000)throw Error('Scan delta 0–1000 ms olmalı');this.time+=deltaMs;this.trace={};for(const [k,v]of Object.entries(this.inputs))this.memory.set(k,v);for(const [k,v]of Object.entries(this.forces))this.memory.set(k,v);this.before=this.memory.snapshot();
+ scan(deltaMs:number){if(!Number.isFinite(deltaMs)||deltaMs<=0||deltaMs>1000)throw Error(this.t('rt.scanDelta'));this.time+=deltaMs;this.trace={};this.localized={};for(const [k,v]of Object.entries(this.inputs))this.memory.set(k,v);for(const [k,v]of Object.entries(this.forces))this.memory.set(k,v);this.before=this.memory.snapshot();
  const execute=(id:string)=>{for(const n of this.program.blocks.find(b=>b.id===id)?.networks??[]){this.connections=n.connections??[];const q=this.evaluate(n.logic);this.trace[n.id]={value:q,detail:`${n.title}: ${q}; ${n.output.type} ${n.output.tag}`};const o=n.output;if(o.type==='COIL')this.memory.set(o.tag,q);if(o.type==='SET'&&q)this.memory.set(o.tag,true);if(o.type==='RESET'&&q)this.memory.set(o.tag,false);if(o.type==='MOVE'&&q&&o.value)this.memory.set(o.tag,this.value(o.value));}};
  if(this.scans===0)execute('OB100');execute('OB1');for(const[k,v]of Object.entries(this.forces))this.memory.set(k,v);this.scans++;for(const t of this.program.tags)if(t.address.startsWith('%Q'))this.outputs[t.name]=this.memory.read(t.name);return this.snapshot();}
  stop(){for(const t of this.program.tags)if(t.address.startsWith('%Q')){this.memory.set(t.name,t.type==='BOOL'?false:0);this.outputs[t.name]=t.type==='BOOL'?false:0;}}

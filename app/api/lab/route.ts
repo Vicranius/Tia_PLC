@@ -1,19 +1,24 @@
 import {env} from 'cloudflare:workers';
-import {validated,evaluate} from '@/src/challenges/evaluator';
+import {validated,evaluate,assertContract,solutionText} from '@/src/challenges/evaluator';
 import {parseProgram} from '@/src/plc/compiler';
-import {catalog} from '@/src/challenges/catalog';
+import {catalogFor} from '@/src/challenges/catalog';
+import {isLang,langOf,translator,type Lang} from '@/src/i18n/core';
+import {serverDict} from '@/src/i18n/dict/server';
 const db=()=> (env as unknown as {DB:D1Database}).DB;
 function owner(request:Request){const value=/plc_session=([a-f0-9-]{36})(?:;|$)/.exec(request.headers.get('cookie')??'')?.[1];return value??crypto.randomUUID();}
 function reply(data:unknown,id:string,status=200){return Response.json(data,{status,headers:{'Cache-Control':'no-store','Set-Cookie':`plc_session=${id}; Path=/; HttpOnly; SameSite=Strict; Max-Age=31536000${process.env.NODE_ENV==='production'?'; Secure':''}`}});}
-export async function GET(request:Request){const session=owner(request);try{const url=new URL(request.url),action=url.searchParams.get('action');if(action==='profile'){const rows=await db().prepare('SELECT challenge,seed,score,passed,concepts,created FROM attempts WHERE owner = ? ORDER BY created DESC LIMIT 100').bind(session).all();return reply({attempts:rows.results},session);}if(action==='restore'){const row=await db().prepare('SELECT payload,updated FROM projects WHERE owner = ?').bind(session).first<{payload:string;updated:number}>();return reply(row?{project:JSON.parse(row.payload),updated:row.updated}:{project:null},session);}const id=Number(url.searchParams.get('id')??3),seed=Number(url.searchParams.get('seed')??0);return reply({challenge:validated(id,seed).public,catalog},session);}catch(e){return reply({error:String(e)},session,400);}}
-export async function POST(request:Request){const session=owner(request);try{
- const origin=request.headers.get('origin');if(origin&&origin!==new URL(request.url).origin)return reply({error:'Origin mismatch'},session,403);
- const text=await request.text();if(text.length>250000)return reply({error:'Program boyutu sınırı aşıldı'},session,413);const body=JSON.parse(text) as Record<string,unknown>;const id=Number(body.id),seed=Number(body.seed);const m=validated(id,seed);
- if(body.action==='solution'||body.action==='next'){const index=Number(body.index??0);if(!Number.isInteger(index)||index<0||index>100)throw Error('Network adımı geçersiz');const networks=m.reference.blocks[0].networks;return reply({program:body.action==='solution'?m.reference:undefined,network:body.action==='next'?networks[index]??null:undefined,explanations:networks.map((n,i)=>`${i+1}. ${n.title}. Network’ler yukarıdan aşağı çalışır; önceki network yazıları aynı scan içinde sonraki network tarafından okunabilir.`),scan:'Girişler process image içine alınır. OB1 network’leri sırayla yürütülür. Timer/counter durumları çağrıda hesaplanır; çıkışlar scan sonunda prosese uygulanır.',why:'Bu referans, başlangıç, geçiş, zaman sınırı ve arıza senaryolarının tamamını geçti.',common:m.public.hints[1]},session);}
- const program=parseProgram(body.program);
+// Language: GET `?lang=en|tr`, POST body `lang` (the query string is a fallback for errors raised before the body is read).
+// Anything else is English. Every user-visible string in a response is in that language.
+export async function GET(request:Request){const session=owner(request);const url=new URL(request.url),lang=langOf(url.searchParams.get('lang'));try{const action=url.searchParams.get('action');if(action==='profile'){const rows=await db().prepare('SELECT challenge,seed,score,passed,concepts,created FROM attempts WHERE owner = ? ORDER BY created DESC LIMIT 100').bind(session).all();return reply({attempts:rows.results},session);}if(action==='restore'){const row=await db().prepare('SELECT payload,updated FROM projects WHERE owner = ?').bind(session).first<{payload:string;updated:number}>();return reply(row?{project:JSON.parse(row.payload),updated:row.updated}:{project:null},session);}const id=Number(url.searchParams.get('id')??3),seed=Number(url.searchParams.get('seed')??0);return reply({challenge:validated(id,seed,lang).public,catalog:catalogFor(lang),lang},session);}catch(e){return reply({error:e instanceof Error?e.message:String(e)},session,400);}}
+export async function POST(request:Request){const session=owner(request);let lang:Lang=langOf(new URL(request.url).searchParams.get('lang'));try{
+ const t=()=>translator(serverDict,lang);
+ const origin=request.headers.get('origin');if(origin&&origin!==new URL(request.url).origin)return reply({error:t()('errOrigin')},session,403);
+ const text=await request.text();if(text.length>250000)return reply({error:t()('errSize')},session,413);let parsed:unknown;try{parsed=JSON.parse(text);}catch{throw Error(t()('errBody'));}if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))throw Error(t()('errBody'));const body=parsed as Record<string,unknown>;if(isLang(body.lang))lang=body.lang;const id=Number(body.id),seed=Number(body.seed);const m=validated(id,seed,lang);
+ if(body.action==='solution'||body.action==='next'){const index=Number(body.index??0);if(!Number.isInteger(index)||index<0||index>100)throw Error(t()('errIndex'));const networks=m.reference.blocks[0].networks;return reply({program:body.action==='solution'?m.reference:undefined,network:body.action==='next'?networks[index]??null:undefined,...solutionText(m,lang),lang},session);}
+ const program=parseProgram(body.program,lang);
  if(body.action==='save'){await db().prepare('INSERT INTO projects (owner,payload,updated) VALUES (?,?,?) ON CONFLICT(owner) DO UPDATE SET payload=excluded.payload,updated=excluded.updated').bind(session,JSON.stringify({id,seed,program}),Date.now()).run();return reply({saved:true},session);}
- if(body.action!=='check')throw Error('Bilinmeyen işlem');
- for(const expected of m.public.tags){const actual=program.tags.find(t=>t.name===expected.name);if(!actual||actual.type!==expected.type||actual.address!==expected.address||actual.initial!==expected.initial)throw Error(`Challenge I/O sözleşmesi değiştirilemez: ${expected.name}. Adres, tür ve başlangıç değerini geri yükle.`);}
- const hintCount=Number(body.hints??0);if(!Number.isInteger(hintCount)||hintCount<0||hintCount>100)throw Error('İpucu sayısı geçersiz');
- const result=evaluate(program,id,seed,hintCount);await db().prepare('INSERT INTO attempts (id,owner,challenge,seed,score,passed,concepts,created) VALUES (?,?,?,?,?,?,?,?)').bind(crypto.randomUUID(),session,id,seed,result.score,result.passed?1:0,JSON.stringify(m.public.concepts),Date.now()).run();return reply(result,session);
+ if(body.action!=='check')throw Error(t()('errAction'));
+ assertContract(program,m,lang);
+ const hintCount=Number(body.hints??0);if(!Number.isInteger(hintCount)||hintCount<0||hintCount>100)throw Error(t()('errHints'));
+ const result=evaluate(program,id,seed,hintCount,lang);await db().prepare('INSERT INTO attempts (id,owner,challenge,seed,score,passed,concepts,created) VALUES (?,?,?,?,?,?,?,?)').bind(crypto.randomUUID(),session,id,seed,result.score,result.passed?1:0,JSON.stringify(m.public.concepts),Date.now()).run();return reply({...result,lang},session);
  }catch(e){return reply({error:e instanceof Error?e.message:String(e)},session,400);}}
