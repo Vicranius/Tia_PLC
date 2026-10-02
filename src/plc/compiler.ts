@@ -1,5 +1,5 @@
 import {connectionError} from './connections';
-import {type Block,type Program,type Diagnostic,type Value,walk,types,CALC_OPS,CALC_PINS} from './model';
+import {type Block,type DataType,type Program,type Diagnostic,type Value,walk,types,CALC_OPS,CALC_PINS} from './model';
 import {blockLabel,blockName,dbOperands,identifier,localVar,vars} from './blocks';
 import {address,validScalar} from './memory';
 import type {Lang} from '../i18n/core';
@@ -15,8 +15,11 @@ export function compile(p:Program,lang:Lang='en'):Diagnostic[]{
  if(!p.blocks.some(b=>b.id==='OB1'))add('E010',t('diag.E010'));
  // Blocks: unique names, valid identifiers and interfaces, instance DBs bound to existing FBs.
  const names=new Set<string>();for(const b of p.blocks){const name=blockName(b);if(!identifier.test(name))add('E054',t('diag.E054',{name}));if(names.has(name.toLowerCase())||tags.has(name))add('E056',t('diag.E056',{name}));names.add(name.toLowerCase());
-  for(const v of [...vars(b.iface),...(b.data??[])]){if(!identifier.test(v.name))add('E054',t('diag.E054',{name:`${name}.${v.name}`}));if(!validScalar(v.type,v.initial))add('E004',t('diag.E004',{name:`${name}.${v.name}`,type:v.type}));}
+  const members=new Set<string>();for(const v of [...vars(b.iface),...(b.data??[])]){const key=v.name.toLowerCase();if(members.has(key))add('E066',t('diag.E066',{name:`${name}.${v.name}`}));members.add(key);if(!identifier.test(v.name))add('E054',t('diag.E054',{name:`${name}.${v.name}`}));if(!validScalar(v.type,v.initial))add('E004',t('diag.E004',{name:`${name}.${v.name}`,type:v.type}));}
   if(b.kind==='DB'&&b.instanceOf&&p.blocks.find(x=>x.id===b.instanceOf)?.kind!=='FB')add('E055',t('diag.E055',{name}));}
+ // Implicit conversion of a call parameter: same type, integer widening, any integer into REAL, DINT<->TIME.
+ const size:Record<string,number>={BYTE:1,WORD:2,INT:2,DWORD:4,DINT:4};
+ const fits=(from:DataType,to:DataType)=>from===to||(to==='REAL'&&from in size)||(from in size&&to in size&&size[from]<=size[to])||(from==='TIME'&&to==='DINT')||(from==='DINT'&&to==='TIME');
  let block:Block=p.blocks[0];
  const operandType=(tag:string)=>tag.startsWith('#')?localVar(block,tag.slice(1))?.type:tags.get(tag)?.type??dbOps.get(tag)??virtuals.get(tag.toLowerCase());
  const ref=(tag:string,n:string,bool=false)=>{const type=operandType(tag);if(!type)add('E001',t('diag.E001',{tag}),n);else if(bool&&type!=='BOOL')add('E006',t('diag.E006.bool',{tag}),n);};
@@ -31,8 +34,13 @@ export function compile(p:Program,lang:Lang='en'):Diagnostic[]{
  if(n.output.type==='JMP'||n.output.type==='JMPN'||n.output.type==='RET'){if(n.output.type!=='RET'&&!labels.has(n.output.tag.trim()))add('E059',t('diag.E059',{label:n.output.tag||'?'}),n.id);}
  else if(n.output.type==='CALL'){const o=n.output,callee=p.blocks.find(x=>x.id===o.tag);if(!callee||(callee.kind!=='FC'&&callee.kind!=='FB'))add('E050',t('diag.E050',{name:o.tag}),n.id);else{calls.get(b.id)!.add(callee.id);const label=blockLabel(callee);if(callee.kind==='FB'){const db=p.blocks.find(x=>x.id===o.instance);if(!db||db.kind!=='DB'||db.instanceOf!==callee.id)add('E051',t('diag.E051',{name:label}),n.id);}
   const ins=vars(callee.iface,['input','inout']),outs=vars(callee.iface,['output']);
-  for(const [param,v] of Object.entries(o.params??{})){const decl=ins.find(x=>x.name===param);if(!decl)add('E052',t('diag.E052',{block:label,param}),n.id);else if(v.kind==='tag'){ref(v.tag,n.id,decl.type==='BOOL');if(decl.type!=='BOOL'&&operandType(v.tag)==='BOOL')add('E006',t('diag.E006.numeric',{tag:v.tag}),n.id);if(vars(callee.iface,['inout']).some(x=>x.name===param))writable(v.tag,n.id);}else if(decl.type!=='BOOL')value(v,n.id);}
-  for(const [param,dest] of Object.entries(o.outs??{})){const decl=outs.find(x=>x.name===param);if(!decl)add('E052',t('diag.E052',{block:label,param}),n.id);else if(dest){ref(dest,n.id,decl.type==='BOOL');writable(dest,n.id);if(tags.get(dest)?.address.startsWith('%I'))add('E009',t('diag.E009.output'),n.id);}}}}
+  for(const [param,v] of Object.entries(o.params??{})){const decl=ins.find(x=>x.name===param);if(!decl)add('E052',t('diag.E052',{block:label,param}),n.id);else{const inout=vars(callee.iface,['inout']).some(x=>x.name===param),where={block:label,param,type:decl.type};
+   if(v.kind==='tag'){ref(v.tag,n.id,decl.type==='BOOL');const actual=operandType(v.tag);if(decl.type!=='BOOL'&&actual==='BOOL')add('E006',t('diag.E006.numeric',{tag:v.tag}),n.id);else if(actual&&actual!=='BOOL'&&decl.type!=='BOOL'&&!fits(actual,decl.type))add('E064',t('diag.E064',{...where,actual:`${v.tag} (${actual})`}),n.id);
+    if(inout){writable(v.tag,n.id);if(tags.get(v.tag)?.address.startsWith('%I'))add('E009',t('diag.E009.mapped',{label:`${label}.${param}`}),n.id);if(actual&&actual!==decl.type)add('E064',t('diag.E064',{...where,actual:`${v.tag} (${actual})`}),n.id);}}
+   else if(inout)add('E065',t('diag.E065',where),n.id);
+   else if(v.kind==='literal'){if(decl.type==='BOOL'?v.value!==0&&v.value!==1:!validScalar(decl.type,v.value))add('E063',t('diag.E063',{...where,value:String(v.value)}),n.id);}
+   else if(decl.type==='BOOL')add('E064',t('diag.E064',{...where,actual:v.op}),n.id);else value(v,n.id);}}
+  for(const [param,dest] of Object.entries(o.outs??{})){const decl=outs.find(x=>x.name===param);if(!decl)add('E052',t('diag.E052',{block:label,param}),n.id);else if(dest){ref(dest,n.id,decl.type==='BOOL');writable(dest,n.id);const actual=operandType(dest);if(actual&&decl.type!=='BOOL'&&actual!=='BOOL'&&!fits(decl.type,actual))add('E064',t('diag.E064',{block:label,param,type:decl.type,actual:`${dest} (${actual})`}),n.id);if(tags.get(dest)?.address.startsWith('%I'))add('E009',t('diag.E009.output'),n.id);}}}}
  else{ref(n.output.tag,n.id,n.output.type!=='MOVE');writable(n.output.tag,n.id);const target=tags.get(n.output.tag);
  if(target?.address.startsWith('%I'))add('E009',t('diag.E009.output'),n.id);
  if(n.output.type==='MOVE'){if(!n.output.value)add('E011',t('diag.E011'),n.id);else value(n.output.value,n.id);if(operandType(n.output.tag)==='BOOL')add('E006',t('diag.E006.moveTarget'),n.id);}

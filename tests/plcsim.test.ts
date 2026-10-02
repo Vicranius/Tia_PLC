@@ -68,7 +68,7 @@ test('Plcsim SSR: MAINT LED yellow while forcing; ERROR LED red for ERROR mode',
 test('Plcsim SSR: STOP caused by PAUSE keeps the yellow LED (no green)',()=>{assert.doesNotMatch(sim('en',{mode:'PAUSE'}),/led green/);});
 
 // ---- DownloadDialog ----
-const dialog=(lang:Lang,over:Partial<Parameters<typeof DownloadDialog>[0]>={})=>render(lang,createElement(DownloadDialog,{first:true,simulation:true,cpu:'CPU 1214C DC/DC/DC',running:false,errors:0,onLoad:()=>true,onFinish:noop,onCancel:noop,...over}));
+const dialog=(lang:Lang,over:Partial<Parameters<typeof DownloadDialog>[0]>={})=>render(lang,createElement(DownloadDialog,{first:true,simulation:true,cpu:'CPU 1214C DC/DC/DC',running:false,errors:0,onLoad:async()=>true,onFinish:noop,onCancel:noop,...over}));
 test('DownloadDialog SSR: first download starts at Extended download with search; Load disabled until a device is found',()=>{
  for(const lang of LANGS){
   const html=dialog(lang);has(lang,html,'dl.title','dl.interfaceType','dl.interface','dl.connection','dl.target','dl.search','dl.device','dl.deviceType','dl.interfaceTypeCol','dl.address','dl.load','dl.cancel');

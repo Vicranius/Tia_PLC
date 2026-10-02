@@ -16,7 +16,7 @@ export const blocksDict=defineDict({
  'iface.initialCall':'Initial call of this OB','iface.remanence':'=True, if remanent data are available','iface.lostRetentive':'=True, if retentive data are lost','iface.lostRtc':'=True, if the real-time clock is lost',
  'db.instanceNote':'Instance DB of {fb}: its structure comes from the interface of the function block.','db.empty':'No members.',
  'msg.created':'{name} was added.','msg.deleted':'{name} was deleted.','msg.deleteMain':'Main [OB1] cannot be deleted.','msg.renamed':'Renamed to {name}.','msg.badName':'Invalid or duplicate name: {name}',
- 'tree.programBlocks':'Program blocks','instr.blocks':'Program blocks','instr.noBlocks':'Add a function block or function in the project tree to call it here.',
+ 'tree.programBlocks':'Program blocks','instr.blocks':'Program blocks','monitor.instance':'Monitored instance:','instr.noBlocks':'Add a function block or function in the project tree to call it here.',
 },{
  'add.title':'Yeni blok ekle','add.name':'Ad:','add.language':'Dil:','add.number':'Numara:','add.manual':'Manuel','add.automatic':'Otomatik','add.type':'Tip:','add.open':'Ekle ve aç','add.ok':'Tamam','add.cancel':'İptal',
  'kind.OB':'Organizasyon bloğu','kind.FB':'Fonksiyon bloğu','kind.FC':'Fonksiyon','kind.DB':'Veri bloğu',
@@ -32,5 +32,5 @@ export const blocksDict=defineDict({
  'iface.initialCall':'Bu OB’nin ilk çağrısı','iface.remanence':'=True, kalıcı veri varsa','iface.lostRetentive':'=True, kalıcı veriler kaybolduysa','iface.lostRtc':'=True, gerçek zaman saati kaybolduysa',
  'db.instanceNote':'{fb} instance DB’si: yapısı fonksiyon bloğunun arayüzünden gelir.','db.empty':'Üye yok.',
  'msg.created':'{name} eklendi.','msg.deleted':'{name} silindi.','msg.deleteMain':'Main [OB1] silinemez.','msg.renamed':'Yeni ad: {name}.','msg.badName':'Geçersiz veya tekrarlanan ad: {name}',
- 'tree.programBlocks':'Program blokları','instr.blocks':'Program blokları','instr.noBlocks':'Burada çağırmak için proje ağacında bir fonksiyon bloğu veya fonksiyon ekle.',
+ 'tree.programBlocks':'Program blokları','instr.blocks':'Program blokları','monitor.instance':'İzlenen instance:','instr.noBlocks':'Burada çağırmak için proje ağacında bir fonksiyon bloğu veya fonksiyon ekle.',
 });

@@ -42,7 +42,7 @@ export function DbEditor({program,block,values,monitoring,locked,onChange}:{prog
  const monitor=(v:Variable)=>monitoring?formatValue(values[`${name}.${v.name}`],v.type,defaultFormat(v.type)):'';
  return <div className="tia-table-editor"><div className="tia-table-scroll">{fb&&<p className="tia-muted">{t('db.instanceNote',{fb:blockLabel(fb)})}</p>}
   <table className="tia-grid tia-edit-grid"><thead><tr><th/><th>{t('iface.name')}</th><th>{t('iface.dataType')}</th><th>{t('iface.start')}</th><th>{t('iface.monitor')}</th><th>{t('iface.retain')}</th><th>{t('iface.comment')}</th><th/></tr></thead><tbody>
-   <tr className="section"><td>▾</td><td colSpan={7}>Static</td></tr>
+   <tr className="section"><td>▾</td><td colSpan={7}>{t('iface.static')}</td></tr>
    {fb?members.map(v=><tr key={v.name}><td/><td>{v.name}</td><td>{typeLabel(v.type)}</td><td>{String(v.initial)}</td><td>{monitor(v)}</td><td className="center"><input type="checkbox" disabled checked={false} aria-label={t('iface.retain')}/></td><td className="muted">{v.comment}</td><td/></tr>)
    :(block.data??[]).map((v,i)=><tr key={i}><td/><td><input aria-label={t('iface.name')} disabled={locked} value={v.name} onChange={e=>onChange((block.data??[]).map((x,j)=>j===i?{...x,name:e.target.value.trim()}:x))}/></td>
     <td><select aria-label={t('iface.dataType')} disabled={locked} value={v.type} onChange={e=>{const type=e.target.value as DataType;onChange((block.data??[]).map((x,j)=>j===i?{...x,type,initial:defaultValue(type)}:x));}}>{types.map(x=><option key={x} value={x}>{typeLabel(x)}</option>)}</select></td>

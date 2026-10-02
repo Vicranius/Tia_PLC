@@ -27,8 +27,8 @@ import {shellDict} from '../i18n/dict/shell';
 import {tablesDict} from '../i18n/dict/tables';
 import {catalogFor} from '../challenges/catalog';
 import {compile,parseProgram} from '../plc/compiler';
-import {blankNetwork,type Block,type Tag} from '../plc/model';
-import {blockLabel,callInfo,dbOperands,defaultValue,vars} from '../plc/blocks';
+import {blankNetwork,type Block,type Program,type Tag} from '../plc/model';
+import {blockLabel,blockName,callInfo,dbOperands,defaultValue,vars} from '../plc/blocks';
 import {AddBlockDialog,CallOptionsDialog} from './shell/BlockDialogs';
 import {DbEditor,InterfaceEditor} from './shell/BlockEditors';
 import {blocksDict} from '../i18n/dict/blocks';
@@ -40,6 +40,7 @@ const isError=(text:string)=>/failed|could not|cannot|canceled|invalid|başarıs
 export default function Lab(){
  const lab=useLab(),{lang,setLang}=useLang(),t=useT(shellDict),tt=useT(tablesDict),tb=useT(blocksDict);const {c,program,snapshot,plant,mode,cycle,monitor,busy,result,hints,solution}=lab;
  const [portalView,setPortalView]=useState(true),[editors,setEditors]=useState<EditorId[]>(['ladder:OB1']),[active,setActive]=useState<EditorId>('ladder:OB1'),[online,setOnline]=useState(false),[simOn,setSimOn]=useState(false),[dlOpen,setDlOpen]=useState(false),[connected,setConnected]=useState(false),[watchRows,setWatchRows]=useState<WatchRow[]|null>(null),[forceRows,setForceRows]=useState<ForceRow[]|null>(null);
+ const [watchedInstance,setWatchedInstance]=useState<Record<string,string>>({});
  const [treeOpen,setTreeOpen]=useState(true),[cardsOpen,setCardsOpen]=useState(true),[card,setCard]=useState<CardId>('instructions');
  const [inspectorOpen,setInspectorOpen]=useState(true),[inspectorTab,setInspectorTab]=useState<InspectorTab>('properties'),[inspectorSub,setInspectorSub]=useState('general');
  const [why,setWhy]=useState(''),[maximized,setMaximized]=useState(false),[zoom,setZoom]=useState(100),[iface,setIface]=useState(false),[errorIndex,setErrorIndex]=useState(-1);
@@ -47,15 +48,22 @@ export default function Lab(){
  const [inspectorTarget,setInspectorTarget]=useState<HTMLDivElement|null>(null),[command,setCommand]=useState<{kind:string;nonce:number}>(),[log,setLog]=useState<LogEntry[]>([]);
  const file=useRef<HTMLInputElement>(null),live=useRef(lab);live.current=lab;
  const view=active.startsWith('ladder:')?'ladder':active.startsWith('db:')?'db':active,block=active.startsWith('ladder:')?active.slice(7):'OB1',currentBlock=program.blocks.find(b=>b.id===block)??program.blocks[0],dbBlock=active.startsWith('db:')?program.blocks.find(b=>b.id===active.slice(3)):undefined;
+ // An FB is monitored in the context of one instance DB (TIA "monitor with instance"); its trace entries carry the "<DB>/" prefix.
+ const fbInstances=currentBlock.kind==='FB'?program.blocks.filter(b=>b.kind==='DB'&&b.instanceOf===currentBlock.id):[],watched=fbInstances.find(d=>d.id===watchedInstance[currentBlock.id])??fbInstances[0];
+ const rawTrace=snapshot?.trace??{},prefix=watched?blockName(watched)+'/':'',viewTrace=prefix?Object.fromEntries(Object.entries(rawTrace).flatMap(([k,v])=>k.startsWith(prefix)?[[k.slice(prefix.length),v]]:[])):rawTrace;
  const label=(id:string)=>{const b=program.blocks.find(x=>x.id===id);return b?blockLabel(b):id;};
  // LAD operands of the open block: PLC tags, its #locals and all data block members.
  const editorTags:Tag[]=[...program.tags,...vars(currentBlock.iface).map(v=>({name:`#${v.name}`,type:v.type,address:'',initial:v.initial,comment:v.comment})),...[...dbOperands(program)].map(([name,type])=>({name,type,address:'',initial:defaultValue(type),comment:''}))];
  const diagnostics=compile(program,lang),errors=diagnostics.filter(d=>d.severity==='error').length,locked=mode==='RUN'||busy,running=mode==='RUN';
  const values=snapshot?.values??Object.fromEntries(program.tags.map(x=>[x.name,x.initial]));
  // Online/offline comparison per block, as in TIA: monitoring needs the block on the CPU to equal the one in the editor.
- const sameBlock=(id:string)=>!!lab.downloaded&&JSON.stringify(lab.downloaded.blocks.find(b=>b.id===id))===JSON.stringify(program.blocks.find(b=>b.id===id));
- const differs=new Set(lab.downloaded||simOn?program.blocks.filter(b=>!sameBlock(b.id)).map(b=>b.id):[]),consistent=!!lab.downloaded&&!differs.size&&JSON.stringify(lab.downloaded.tags)===JSON.stringify(program.tags);
- const monitoring=online&&monitor,io=program.tags.filter(x=>/^%[IQ]/.test(x.address));
+ // Online/offline comparison of a block covers the block itself, the tags it uses (address/type) and the interfaces of the blocks and instance DBs it calls.
+ const signature=(p:Program,id:string)=>{const b=p.blocks.find(x=>x.id===id);if(!b)return '';const text=JSON.stringify(b),called=new Set<string>();for(const n of b.networks)if(n.output.type==='CALL'){called.add(n.output.tag);if(n.output.instance)called.add(n.output.instance);}
+  return JSON.stringify([b,p.tags.filter(t=>text.includes(`"${t.name}"`)||text.includes(`"${t.name}.`)),[...called].sort().map(c=>{const x=p.blocks.find(y=>y.id===c);return x?[x.id,blockName(x),x.iface,x.data,x.instanceOf]:c;})]);};
+ const sameBlock=(id:string)=>!!lab.downloaded&&signature(lab.downloaded,id)===signature(program,id);
+ const tagsEqual=!!lab.downloaded&&JSON.stringify(lab.downloaded.tags)===JSON.stringify(program.tags),onlineOnly=lab.downloaded?lab.downloaded.blocks.filter(b=>!program.blocks.some(x=>x.id===b.id)).map(b=>b.id):[];
+ const differs=new Set(lab.downloaded||simOn?program.blocks.filter(b=>!sameBlock(b.id)).map(b=>b.id):[]),consistent=!!lab.downloaded&&!differs.size&&!onlineOnly.length&&tagsEqual;
+ const monitoring=online&&monitor&&tagsEqual,io=program.tags.filter(x=>/^%[IQ]/.test(x.address));
  const watch=watchRows??io.map(x=>({name:x.name,format:defaultFormat(x.type),modify:'',modifyOn:false})),force=forceRows??io.filter(x=>x.address.startsWith('%I')).map(x=>({name:x.name,format:defaultFormat(x.type),force:x.type==='BOOL'?'TRUE':'0',forceOn:false}));
  useEffect(()=>{setWatchRows(null);setForceRows(null);},[c.id]);
  const exerciseTitle=catalogFor(lang).find(x=>x.id===c.id)?.title??c.title;
@@ -77,13 +85,13 @@ export default function Lab(){
  const compileNow=()=>{inspect('info','compile');lab.setMessage(t('info.compileSummary',{e:errors,w:diagnostics.length-errors}));};
  const download=()=>{if(errors){inspect('info','compile');lab.setMessage(t('msg.downloadBlocked'));return;}setDlOpen(true);};
  const startSimulation=()=>{setSimOn(true);showCard('testing');lab.setMessage(t('msg.simulation'));if(errors){inspect('info','compile');lab.setMessage(t('msg.downloadBlocked'));}else setDlOpen(true);};
- const closeSimulation=()=>{setSimOn(false);setOnline(false);setDlOpen(false);lab.unload();lab.setMessage(t('msg.simClosed'));};
+ const closeSimulation=()=>{setSimOn(false);setOnline(false);setDlOpen(false);setConnected(false);lab.unload();lab.setMessage(t('msg.simClosed'));};
  const startCpu=()=>{if(!simOn){lab.setMessage(t('msg.noSimulation'));return;}if(!lab.run()){lab.setMessage(t('msg.needDownload'));download();}};
  const stopCpu=()=>lab.send({action:'stop'});
  const step=()=>{if(!simOn){lab.setMessage(t('msg.noSimulation'));return;}if(!lab.run('step')){lab.setMessage(t('msg.needDownload'));return;}inspect('info','scan');};
  const mres=()=>{if(lab.downloaded){lab.send({action:'load',program:lab.downloaded,plant:c.plant});lab.setMessage(t('testing.mresDone'));}};
  const modify=(entries:[string,import('../plc/model').Scalar][])=>{for(const [tag,value] of entries){if(program.tags.find(x=>x.name===tag)?.address.startsWith('%I'))lab.input(tag,value);else lab.send({action:'write',tag,value});}};
- const needOnline=(fn:()=>void)=>()=>{if(!online){lab.setMessage(tt('msg.needOnline'));return false;}fn();return true;};
+ const needOnline=(fn:()=>void)=>()=>{if(!online){lab.setMessage(tt('msg.needOnline'));return false;}if(!tagsEqual){lab.setMessage(t('msg.tagsDiffer'));return false;}fn();return true;};
  const panel=(fn:()=>void)=>()=>{if(!online){lab.setMessage(t('testing.needOnline'));return;}fn();};
  const goOnline=()=>{if(!simOn){lab.setMessage(t('msg.noSimulation'));return;}setOnline(true);lab.setMonitor(true);lab.setMessage(t('msg.online'));};
  const goOffline=()=>{setOnline(false);lab.setMessage(t('msg.offline'));};
@@ -117,8 +125,8 @@ export default function Lab(){
    <div className="tia-editor-toolbar" role="toolbar" aria-label={t('editor.toolbar')}><button title={t('editor.insertNetwork')} aria-label={t('editor.insertNetwork')} disabled={locked} onClick={addNetwork}><ListPlus size={16} color="#2f6ea8"/></button><i/><button title={t('editor.prevError')} aria-label={t('editor.prevError')} disabled={!diagnostics.some(d=>d.network)} onClick={()=>stepError(-1)}><ChevronUp size={16} color="#c0392b"/></button><button title={t('editor.nextError')} aria-label={t('editor.nextError')} disabled={!diagnostics.some(d=>d.network)} onClick={()=>stepError(1)}><ChevronDown size={16} color="#c0392b"/></button><i/><span className="tia-grow"/><button className={online&&monitor?'pressed':''} title={online?t('editor.monitoring'):t('editor.monitoringOffline')} aria-label={t('editor.monitoring')} aria-pressed={online&&monitor} onClick={toggleMonitoring}><Glasses size={17} color={online?'#e8730c':'#6b7680'}/></button></div>
    <button className={`tia-iface-strip${iface?' open':''}`} aria-expanded={iface} onClick={()=>setIface(v=>!v)}>{t('editor.interface')}<span>{iface?'▴':'▾'}</span></button>
    {iface&&<div className="tia-iface"><InterfaceEditor block={currentBlock} locked={locked} onChange={iface=>updateBlock(currentBlock.id,{iface})}/></div>}
-   {online&&monitor&&!sameBlock(block)&&<div className="tia-differs" role="status">{t('msg.differs',{block:label(block)})}</div>}
-   <div className="tia-editor-scroll"><Editor inspectorTarget={inspectorTarget} onInspect={()=>{if(inspectorTab!=='properties'||!inspectorOpen)inspect('properties','general');}} blockName={currentBlock.title??(block==='OB1'?t('block.mainTitle'):block==='OB100'?t('block.startupTitle'):label(block))} callInfo={o=>callInfo(program,o)} zoom={zoom} onCommandDone={()=>setCommand(undefined)} command={command} networks={currentBlock.networks} tags={editorTags} trace={snapshot?.trace??{}} monitor={online&&monitor&&sameBlock(block)} locked={locked} onWhy={showWhy} onChange={commitBlock}/></div>
+   {online&&monitor&&!sameBlock(block)&&<div className="tia-differs" role="status">{t('msg.differs',{block:label(block)})}</div>}{online&&onlineOnly.length>0&&<div className="tia-differs" role="status">{t('msg.onlineOnly',{blocks:onlineOnly.join(', ')})}</div>}{online&&!tagsEqual&&<div className="tia-differs" role="status">{t('msg.tagsDiffer')}</div>}
+   <div className="tia-editor-scroll">{fbInstances.length>0&&<label className="tia-instance-pick">{tb('monitor.instance')}<select value={watched?.id} onChange={e=>setWatchedInstance(w=>({...w,[currentBlock.id]:e.target.value}))}>{fbInstances.map(d=><option key={d.id} value={d.id}>{blockLabel(d)}</option>)}</select></label>}<Editor inspectorTarget={inspectorTarget} onInspect={()=>{if(inspectorTab!=='properties'||!inspectorOpen)inspect('properties','general');}} blockName={currentBlock.title??(block==='OB1'?t('block.mainTitle'):block==='OB100'?t('block.startupTitle'):label(block))} callInfo={o=>callInfo(program,o)} zoom={zoom} onCommandDone={()=>setCommand(undefined)} command={command} networks={currentBlock.networks} tags={editorTags} trace={viewTrace} monitor={online&&monitor&&sameBlock(block)} locked={locked} onWhy={showWhy} onChange={commitBlock}/></div>
    <div className="tia-zoom"><Choice label={t('editor.zoom')} value={String(zoom)} options={['50','75','100','125','150','200'].map(v=>({value:v,label:`${v}%`}))} onChange={v=>setZoom(Number(v))}/><input type="range" min={50} max={200} step={5} value={zoom} aria-label={t('editor.zoom')} onChange={e=>setZoom(Number(e.target.value))}/></div>
   </>;
   case 'db':return dbBlock?<DbEditor program={program} block={dbBlock} values={values} monitoring={monitoring} locked={locked} onChange={data=>updateBlock(dbBlock.id,{data})}/>:null;
@@ -168,6 +176,6 @@ export default function Lab(){
  {simOn&&<Plcsim cpu={program.cpu} mode={mode} loaded={!!lab.downloaded} consistent={consistent} errors={0} forces={Object.keys(snapshot?.forces??{}).length} onRun={startCpu} onStop={stopCpu} onMres={mres} onClose={closeSimulation}/>}
  {addBlock&&<AddBlockDialog program={program} onCreate={createBlock} onCancel={()=>setAddBlock(false)}/>}
  {callFb&&<CallOptionsDialog program={program} fb={callFb} onCancel={()=>setCallFb(null)} onCreate={db=>{lab.commit({...program,blocks:[...program.blocks,db]});setCallFb(null);setCommand({kind:`CALL:${callFb.id}:${db.id}`,nonce:Date.now()});lab.setMessage(tb('msg.created',{name:blockLabel(db)}));}}/>}
- {dlOpen&&<DownloadDialog first={!connected} simulation={simOn} cpu={program.cpu} running={running} errors={errors} onLoad={()=>{if(running)stopCpu();const ok=lab.download(false);if(ok){setConnected(true);lab.setMessage(t('msg.downloadOk'));}return ok;}} onFinish={start=>{setDlOpen(false);if(start)lab.run();}} onCancel={()=>setDlOpen(false)}/>}
+ {dlOpen&&<DownloadDialog first={!connected} simulation={simOn} cpu={program.cpu} running={running} errors={errors} onLoad={async()=>{if(!simOn)return false;if(running)stopCpu();const ok=await lab.download(false);if(ok){setConnected(true);lab.setMessage(t('msg.downloadOk'));}return ok;}} onFinish={start=>{setDlOpen(false);if(start&&simOn)lab.run();}} onCancel={()=>setDlOpen(false)}/>}
  </>;
 }

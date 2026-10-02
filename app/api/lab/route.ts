@@ -20,5 +20,6 @@ export async function POST(request:Request){const session=owner(request);let lan
  if(body.action!=='check')throw Error(t()('errAction'));
  assertContract(program,m,lang);
  const hintCount=Number(body.hints??0);if(!Number.isInteger(hintCount)||hintCount<0||hintCount>100)throw Error(t()('errHints'));
- const result=evaluate(program,id,seed,hintCount,lang);await db().prepare('INSERT INTO attempts (id,owner,challenge,seed,score,passed,concepts,created) VALUES (?,?,?,?,?,?,?,?)').bind(crypto.randomUUID(),session,id,seed,result.score,result.passed?1:0,JSON.stringify(m.public.concepts),Date.now()).run();return reply({...result,lang},session);
+ // `replay` re-evaluates an earlier check in another language (language switch) without recording a new attempt.
+ const result=evaluate(program,id,seed,hintCount,lang);if(body.replay!==true)await db().prepare('INSERT INTO attempts (id,owner,challenge,seed,score,passed,concepts,created) VALUES (?,?,?,?,?,?,?,?)').bind(crypto.randomUUID(),session,id,seed,result.score,result.passed?1:0,JSON.stringify(m.public.concepts),Date.now()).run();return reply({...result,lang},session);
  }catch(e){return reply({error:e instanceof Error?e.message:String(e)},session,400);}}
