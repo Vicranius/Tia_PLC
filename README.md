@@ -4,6 +4,8 @@ Ladder üzerinden çalışan, TIA Portal çalışma düzeninden esinlenmiş bağ
 
 ## Çalışan kapsam
 
+- TIA tarzı Portal view başlangıç ekranı: Start (proje aç, endüstriyel alıştırmadan yeni proje, First steps), Devices & networks, PLC programming, Visualization, Online & Diagnostics; Project view ile sol alttaki ◂ Portal view düğmesi arasında geçiş.
+- Online izleme TIA program status kuralını izler: yeşil düz = koşul sağlandı, mavi kesikli = sağlanmadı, gri = son scan’de çalışmadı.
 - Gri engineering workspace: Project / Edit / View / Insert / Online / Tools / Help menüleri, Project tree, OB1/OB100, Instructions ağacı, Properties ve alt araç panelleri.
 - Üst komut paneli ve sağ instruction ağacından NO, NC, COIL, SET, RESET, R_TRIG, F_TRIG, TON, TOF, TP, CTU ve compare ekleme.
 - Seri/paralel AST düzenleme, kontak taşıma, network sıralama/silme, açıklama, tag atama, undo/redo.
@@ -47,6 +49,8 @@ npm test
 npm run test:api
 npm run build
 ```
+
+`docs/TIA_FIDELITY_PLAN.md`: TIA Portal benzerliği için eksik analizi ve fazlı yol haritası.
 
 `ARCHITECTURE.md`: mimari diyagramı, veri modelleri, AST, challenge/test formatları ve MVP listesi.
 

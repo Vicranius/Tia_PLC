@@ -1,5 +1,18 @@
+import './review.test';
+import './instructions.test';
+import './blocks.test';
+import './plcsim.test';
+import './tables.test';
+import './shell.test';
 import './industrial.test';
 import './connections.test';
+import './status.test';
+import './portal.test';
+import './i18n-plc.test';
+import './i18n-server.test';
+import './i18n.test';
+import './i18n-content.test';
+import './i18n-ui.test';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {material} from '../src/challenges/private';
@@ -81,7 +94,8 @@ test('Input behavior metadata preserves simulation semantics and round trips thr
 });
 test('Motor exercise starts with physical pushbuttons and staged conceptual hints',()=>{
  const c=challenge(3);assert.equal(c.tags.find(t=>t.name==='START')?.inputMode,'momentary');assert.equal(c.tags.find(t=>t.name==='OVERLOAD')?.inputMode,'toggle');
- assert.ok(!c.hints[1].includes('kendi NO kontağını'));assert.ok(c.hints[1].includes('Paralel'));
+ assert.ok(c.hints[1].includes('Parallel'),'English is the default language');
+ for(const [lang,giveaway,word] of [['en','its own NO contact','Parallel'],['tr','kendi NO kontağını','Paralel']] as const){const hints=challenge(3,0,lang).hints;assert.ok(!hints[1].includes(giveaway),lang);assert.ok(hints[1].includes(word),lang);}
 });
 import {LAD_MIN_RUNG_CELLS} from '../src/ladder/geometry';
 test('Empty and short rungs span nine grid cells without stretching instruction cells',()=>{
@@ -214,7 +228,7 @@ test('Timer and counter blocks expose double-click operand targets',()=>{
  const tags=material(3).reference.tags;
  const timer={id:'n',title:'Timer',logic:{id:'t',type:'TON' as const,instance:'T1',pt:1000,input:{id:'a',type:'NO' as const,tag:'START'}},output:{type:'COIL' as const,tag:'MOTOR'}};
  const markup=renderToStaticMarkup(createElement(Rung,{network:timer,tags,trace:{},monitor:false,locked:false,selected:'',onSelect:()=>{},onWhy:()=>{},onMove:()=>{},onTag:()=>{},onOperand:()=>{},onInsert:()=>{}}));
- assert.match(markup,/aria-label="PT operandını düzenle"/);assert.match(markup,/aria-label="ET çıkış tagini düzenle"/);
+ assert.match(markup,/aria-label="Edit PT operand"/);assert.match(markup,/aria-label="Edit ET output tag"/);
 });
 
 for(const [command,type] of [['NO','NO'],['NC','NC'],['R_TRIG','P'],['F_TRIG','N']] as const)test(`${command} inserts ONE unassigned contact, never an automatic START`,()=>{

@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
+import { cookies, headers } from 'next/headers';
+import { APP_DESCRIPTION, APP_TITLE, LANG_COOKIE, parseAcceptLanguage, resolveLanguage } from '@/src/i18n/core';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
+import './tia.css';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -12,17 +15,20 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-export const metadata: Metadata = {
-  title: 'PLC Lab Web – S7-1200 Industrial Trainer', description: 'Ladder mantığı, PLC simülasyonu ve endüstriyel problemler.',
-};
+const lang = async () => resolveLanguage((await cookies()).get(LANG_COOKIE)?.value, parseAcceptLanguage((await headers()).get('accept-language')));
 
-export default function RootLayout({
+export async function generateMetadata(): Promise<Metadata> {
+  const current = await lang();
+  return { title: APP_TITLE[current], description: APP_DESCRIPTION[current] };
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr">
+    <html lang={await lang()}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

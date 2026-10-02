@@ -1,19 +1,30 @@
-export const modules=[
- ['PLC ve Scan Cycle','Giriş görüntüsü her scan başında alınır; network’ler sıralı yürütülür. Aynı scan içinde önceki yazılar sonraki network’te görülebilir.',1],
- ['NO / NC Contacts','NO tag TRUE iken, NC tag FALSE iken mantıksal geçiş sağlar. LAD NC ile fiziksel NC buton aynı şey değildir.',1],
- ['AND / OR Logic','Seri kontaklar bütün koşulları, paralel kollar alternatif koşulları ifade eder.',2],
- ['Start Stop Circuit','Durdurma sinyali başlatmadan önce değerlendirilmelidir. START ve STOP birlikteyken güvenli durum seçilir.',3],
- ['Seal-in','Motor kontağı START ile paralel durum tutar. Durdurma koşulları paralel grubun dışında bulunmalıdır.',4],
- ['Interlocks','Karşıt hareketleri birbirinin durumuyla engelle. Komutların birlikte gelmesini de test et.',6],
- ['Timers','TON gecikmeli açar; TOF gecikmeli kapatır; TP kenarda darbe üretir. PT hedef, ET geçen süredir.',7],
- ['Counters','CTU yükselen kenarları sayar. CU sürekli TRUE ise yeni ürün sayılmaz. RESET önceliklidir.',10],
- ['Sequence Control','Bir sıradaki adımları ayrı durumlar olarak temsil et. Her adımın çıkış ve geçiş koşulunu tanımla.',12],
- ['Analog Inputs','Ham aralığın anlamını modül yapılandırması belirler. Bu eğitimde sanal analog modül 0–27648 aralığı kullanır.',18],
- ['Scaling','NORM_X ile 0–1 oranını, SCALE_X ile mühendislik birimini bul. Aralık dışı sensörleri ayrıca değerlendir.',18],
- ['Motor Control','Ana kontaktör, yön kilidi ve arıza resetini birlikte düşün. Standart PLC güvenlik devresinin yerini almaz.',19],
- ['Conveyor Automation','Motor çıkışı ürünü hareket ettirir. Konumdan oluşan sensör, bir sonraki scan’de PLC girişine döner.',11],
- ['Tank Automation','İki eşikli dolum/boşaltma titreşimi önler. Çelişen sensörlerde durdurma önceliği belirle.',14],
- ['FB / FC / DB','FC kalıcı instance belleği olmadan çağrılan fonksiyondur. FB durumunu instance DB içinde tutar. Tam blok arayüzleri sonraki aşamadadır.',3],
- ['State Machines','Her durumun giriş, çıkış ve geçiş koşullarını açık yaz. Bir scan’de birden çok geçişin istenip istenmediğini belirle.',12],
- ['Industrial Troubleshooting','Semptomu bir giriş-zaman dizisine çevir. Başarısız scan’in mantık izini okuyarak kök nedeni bul.',3],
-] as const;
+import {pick,type Lang,type Text} from '../i18n/core';
+// Course modules carry both languages side by side; `exercise` is the catalog exercise opened by “guided exercise”.
+const T=(en:string,tr:string):Text=>({en,tr});
+export interface CourseModule {title:Text;body:Text;exercise:number}
+export interface LocalizedModule {title:string;body:string;exercise:number}
+export const curriculum:readonly CourseModule[]=[
+ {title:T('The PLC and the Scan Cycle','PLC ve Tarama Çevrimi'),body:T('The input image is captured at the start of every scan; networks execute in order. Writes made earlier in the same scan are visible to later networks.','Giriş görüntüsü her scan başında alınır; network’ler sıralı yürütülür. Aynı scan içinde önceki yazılar sonraki network’te görülebilir.'),exercise:1},
+ {title:T('NO / NC Contacts','NO / NC Kontaklar'),body:T('An NO contact conducts while its tag is TRUE, an NC contact while its tag is FALSE. A LAD NC contact is not the same thing as a physical NC pushbutton.','NO tag TRUE iken, NC tag FALSE iken mantıksal geçiş sağlar. LAD NC ile fiziksel NC buton aynı şey değildir.'),exercise:1},
+ {title:T('AND / OR Logic','AND / OR Mantığı'),body:T('Series contacts express all conditions together, parallel branches express alternative conditions.','Seri kontaklar bütün koşulları, paralel kollar alternatif koşulları ifade eder.'),exercise:2},
+ {title:T('Start / Stop Circuit','Start / Stop Devresi'),body:T('The stop signal must be evaluated before the start. When START and STOP are present together, the safe state is chosen.','Durdurma sinyali başlatmadan önce değerlendirilmelidir. START ve STOP birlikteyken güvenli durum seçilir.'),exercise:3},
+ {title:T('Seal-in','Mühürleme'),body:T('The motor contact holds its state in parallel with START. Stop conditions must sit outside the parallel group.','Motor kontağı START ile paralel durum tutar. Durdurma koşulları paralel grubun dışında bulunmalıdır.'),exercise:4},
+ {title:T('Interlocks','Kilitlemeler'),body:T('Block opposing movements with each other’s state. Also test the commands arriving together.','Karşıt hareketleri birbirinin durumuyla engelle. Komutların birlikte gelmesini de test et.'),exercise:6},
+ {title:T('Timers','Zamanlayıcılar'),body:T('TON switches on with a delay; TOF switches off with a delay; TP produces a pulse on an edge. PT is the target, ET the elapsed time.','TON gecikmeli açar; TOF gecikmeli kapatır; TP kenarda darbe üretir. PT hedef, ET geçen süredir.'),exercise:7},
+ {title:T('Counters','Sayıcılar'),body:T('CTU counts rising edges. While CU stays TRUE, no new product is counted. RESET has priority.','CTU yükselen kenarları sayar. CU sürekli TRUE ise yeni ürün sayılmaz. RESET önceliklidir.'),exercise:10},
+ {title:T('Sequence Control','Sıralı Kontrol'),body:T('Represent the steps of a sequence as separate states. Define the outputs and the transition condition of every step.','Bir sıradaki adımları ayrı durumlar olarak temsil et. Her adımın çıkış ve geçiş koşulunu tanımla.'),exercise:12},
+ {title:T('Analog Inputs','Analog Girişler'),body:T('The module configuration determines the meaning of the raw range. In this course the virtual analog module uses the range 0–27648.','Ham aralığın anlamını modül yapılandırması belirler. Bu eğitimde sanal analog modül 0–27648 aralığı kullanır.'),exercise:18},
+ {title:T('Scaling','Ölçekleme'),body:T('Use NORM_X to find the 0–1 ratio and SCALE_X to get the engineering unit. Treat out-of-range sensors separately.','NORM_X ile 0–1 oranını, SCALE_X ile mühendislik birimini bul. Aralık dışı sensörleri ayrıca değerlendir.'),exercise:18},
+ {title:T('Motor Control','Motor Kontrolü'),body:T('Consider the main contactor, the direction interlock and the fault reset together. This does not replace a standard PLC safety circuit.','Ana kontaktör, yön kilidi ve arıza resetini birlikte düşün. Standart PLC güvenlik devresinin yerini almaz.'),exercise:19},
+ {title:T('Conveyor Automation','Konveyör Otomasyonu'),body:T('The motor output moves the product. A sensor created by the position returns to the PLC input in the next scan.','Motor çıkışı ürünü hareket ettirir. Konumdan oluşan sensör, bir sonraki scan’de PLC girişine döner.'),exercise:11},
+ {title:T('Tank Automation','Tank Otomasyonu'),body:T('Filling and draining with two thresholds prevents chattering. Define a stop priority for conflicting sensors.','İki eşikli dolum/boşaltma titreşimi önler. Çelişen sensörlerde durdurma önceliği belirle.'),exercise:14},
+ {title:T('FB / FC / DB','FB / FC / DB'),body:T('An FC is a function called without persistent instance memory. An FB keeps its state in an instance DB. Full block interfaces come in a later stage.','FC kalıcı instance belleği olmadan çağrılan fonksiyondur. FB durumunu instance DB içinde tutar. Tam blok arayüzleri sonraki aşamadadır.'),exercise:3},
+ {title:T('State Machines','Durum Makineleri'),body:T('Write down the entry, outputs and transition conditions of every state explicitly. Decide whether more than one transition may be requested in a single scan.','Her durumun giriş, çıkış ve geçiş koşullarını açık yaz. Bir scan’de birden çok geçişin istenip istenmediğini belirle.'),exercise:12},
+ {title:T('Industrial Troubleshooting','Endüstriyel Arıza Giderme'),body:T('Turn the symptom into an input-time sequence. Read the logic trace of the failing scan to find the root cause.','Semptomu bir giriş-zaman dizisine çevir. Başarısız scan’in mantık izini okuyarak kök nedeni bul.'),exercise:3},
+];
+// Display-ready modules in the chosen language (stable identity per language, safe to use in React dependencies).
+const build=(lang:Lang):LocalizedModule[]=>curriculum.map(m=>({title:pick(m.title,lang),body:pick(m.body,lang),exercise:m.exercise}));
+const views:Record<Lang,LocalizedModule[]>={en:build('en'),tr:build('tr')};
+export const modulesFor=(lang:Lang):LocalizedModule[]=>views[lang]??views.en;
+// English course modules as [title, body, exercise], kept for code that does not care about the display language.
+export const modules=views.en.map(m=>[m.title,m.body,m.exercise] as const);
